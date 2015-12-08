@@ -8,6 +8,7 @@
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 
+
 (defentity coverage_data)
 
 (defn- insert-coverage []
@@ -18,9 +19,7 @@
   :allowed-methods [:put]
   :put! (fn [ctx] (insert-coverage)))
 
-;TODO put, Daten in Cassandra speichern. Pro Tag werden immer die höchsten gemessenen Coverage-Daten weggespeichert. Sodass pro Tag ein
-;     Wert pro subprojekt gespeichert wird.
-
+;Daten aus put entgegennehmen und in sqlite-db ablegen, aktueller Tag als key (wenn Daten schon vorhanden -> replace, wenn Wert größer)
 ;erwartetes JSON: {lines: <n>, covered: <m>, project: <project-name>, sub-project: <sub-project>, language: <java|javascript|go>}
 
 

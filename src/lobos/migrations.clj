@@ -3,10 +3,6 @@
                             bigint boolean char double float time])
   (:use [lobos migration core schema]))
 
-;(defn run-migrations []
-;  (binding [lobos.migration/*migrations-namespace* 'fdc-ts.migrations]
-;    (migrate)))
-
 (defmigration add-coverage-data-table
   (up [] (create
             (table :coverage_data
