@@ -1,4 +1,5 @@
 (ns fdc-ts.core
+  (:use [korma db core] fdc-ts.db)
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
@@ -7,11 +8,16 @@
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 
+(defentity coverage_data)
+
+(defn- insert-coverage []
+  (insert coverage_data (values {:project_name "foo" :subproject "bar" :language "clojure"})))
 
 (defresource put-coverage []
   :available-media-types ["application/json"]
   :allowed-methods [:put]
-  :put! (fn [ctx] (println "storing coverage data in cassandra, key (day, project, subproject, language), value <coverage-data-json>")))
+  :put! (fn [ctx] (insert-coverage)))
+
 ;TODO put, Daten in Cassandra speichern. Pro Tag werden immer die höchsten gemessenen Coverage-Daten weggespeichert. Sodass pro Tag ein
 ;     Wert pro subprojekt gespeichert wird.
 
