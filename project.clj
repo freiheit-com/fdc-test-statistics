@@ -11,6 +11,7 @@
                  [compojure "1.3.4"]
                  [ring/ring-core "1.2.1"]
                  [cheshire "5.5.0"]
+                 [clj-time "0.8.0"]
                  [lobos "1.0.0-beta3"]
                  [org.xerial/sqlite-jdbc "3.8.9.1"]
                  [korma "0.4.0"]])
