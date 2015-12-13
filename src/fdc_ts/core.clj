@@ -1,5 +1,5 @@
 (ns fdc-ts.core
-  (:use [korma db core] fdc-ts.db cheshire.core [clj-time [core :as t][coerce :as tc]])
+  (:use [korma db core] fdc-ts.db cheshire.core [clj-time [core :as t][coerce :as tc][format :as tf]])
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
@@ -33,10 +33,35 @@
                                   ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
                           (order :timestamp :DESC))))
 
-(defn- project-coverage-staticists [coverage-data]
-  ;TODO Write some tests
-  ;scan coverage data: collect latest coverage for each language (reduce ... {:languages #{}, :collect } coverage-data)
-  coverage-data)
+(defn- coverage-percentage [data]
+  (let [lines (:lines data)]
+    (if (<= lines 0)
+      1.0 ;by definition
+      (double (/ (:covered data) lines)))))
+
+(defn- db-to-api-data [data]
+  (assoc (select-keys data [:lines :covered :language])
+    :day (tf/unparse (tf/formatter "yyyy-MM-dd") (tf/parse (:timestamp data)))
+    :percentage (coverage-percentage data)))
+
+(defn- latest-coverage-data [state data]
+  (if (contains? (:languages state) (:language data))
+    state
+    {:languages (conj (:languages state) (:language data))
+     :collect (conj (:collect state) (db-to-api-data data))}))
+
+(defn- coverage-overall [coverage-by-language]
+  ;;TODO horribly wrong implementation -> will be fixed when more tests are added to core_test
+  (if (not (first coverage-by-language))
+    {}
+    (dissoc (first coverage-by-language) :language :day)))
+
+;TODO allow time series query: coverage-data from to
+(defn project-coverage-statistics [coverage-data]
+  (let [by-language (:collect (reduce latest-coverage-data {:languages #{} :collect []} coverage-data))]
+    {:overall-coverage (coverage-overall by-language) :by-language by-language}))
+
+  ;TODO Write more tests!
 
 (defresource put-coverage []
   :available-media-types ["application/json"]
@@ -46,7 +71,7 @@
 (defresource get-project-coverage-statistic [project]
   :allowed-methods [:get]
   :available-media-types ["application/json"]
-  :handle-ok (fn [_] (generate-string (project-coverage-staticists (select-latest-coverage-data project)))))
+  :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
 ;TODO
 ;GET /statistic/coverage/<project-name> -> aggregate coverage-data for project <project-name>
@@ -56,7 +81,7 @@
 
 (defroutes app
   (PUT "/data/coverage" [] (put-coverage))
-  (GET ["/statistics/coverage/:project" :project #"\w+"] [project] (get-project-coverage-statistic project)))
+  (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project)))
 
 (def handler
   (-> app wrap-params))
