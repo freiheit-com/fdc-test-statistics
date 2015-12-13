@@ -1,4 +1,4 @@
-
+[![Build Status](https://travis-ci.org/freiheit-com/fdc-test-statistics.svg?branch=master)](https://travis-ci.org/freiheit-com/fdc-test-statistics)
 
 REST-API:
 
