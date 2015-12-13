@@ -50,6 +50,8 @@
     {:languages (conj (:languages state) (:language data))
      :collect (conj (:collect state) (db-to-api-data data))}))
 
+;TODO calc date (freshness) for overall-coverage -> oldest timestamp of language data?
+;-> needed für build lamps!
 (defn- coverage-overall [coverage-by-language]
   ;;TODO horribly wrong implementation -> will be fixed when more tests are added to core_test
   (if (not (first coverage-by-language))
