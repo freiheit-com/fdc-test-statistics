@@ -1,5 +1,6 @@
 (ns fdc-ts.core
-  (:use [korma db core] fdc-ts.db cheshire.core [clj-time [core :as t][coerce :as tc][format :as tf]])
+  (:gen-class)
+  (:use [korma db core] fdc-ts.db cheshire.core [clj-time [core :as t][coerce :as tc][format :as tf]] [ring.adapter.jetty])
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
@@ -87,3 +88,6 @@
 
 (def handler
   (-> app wrap-params))
+
+(defn -main [& args]
+  (run-jetty app {:port 10000 :join? false}))

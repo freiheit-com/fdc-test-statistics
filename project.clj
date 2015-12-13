@@ -6,10 +6,11 @@
   :plugins [[lein-ring "0.9.6"]]
   :ring {:handler fdc-ts.core/handler
          :init lobos.core/migrate}
+  :main fdc-ts.core
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [liberator "0.13"]
                  [compojure "1.3.4"]
-                 [ring/ring-core "1.2.1"]
+                 [ring "1.4.0"]
                  [cheshire "5.5.0"]
                  [clj-time "0.8.0"]
                  [lobos "1.0.0-beta3"]
