@@ -22,6 +22,7 @@
 (defn- coverage-for-today-exist? [data]
   (> (count (select coverage_data (where (coverage-today data)))) 0))
 
+;TODO Validate data!!!
 (defn- insert-coverage [data]
   (if (coverage-for-today-exist? data)
     (update coverage_data (set-fields data) (where (coverage-today data)))
@@ -41,28 +42,38 @@
       (double (/ (:covered data) lines)))))
 
 (defn- db-to-api-data [data]
-  (assoc (select-keys data [:lines :covered :language])
+  (assoc (select-keys data [:project :subproject :lines :covered :language])
     :day (tf/unparse (tf/formatter "yyyy-MM-dd") (tf/parse (:timestamp data)))
     :percentage (coverage-percentage data)))
 
+(defn- latest-coverage-start-state []
+  {:seen [] :collect []})
+
+(defn- seen [data]
+  [(:subproject data) (:language data)])
+
 (defn- latest-coverage-data [state data]
-  (if (contains? (:languages state) (:language data))
+  (if (some #(= % (seen data)) (:seen state))
     state
-    {:languages (conj (:languages state) (:language data))
+    {:seen (conj (:seen state) (seen data))
      :collect (conj (:collect state) (db-to-api-data data))}))
 
+(defn- sum-coverage [[covered lines] coverage-data]
+  [(+ (:covered coverage-data) covered) (+ (:lines coverage-data) lines)])
+
 ;TODO calc date (freshness) for overall-coverage -> oldest timestamp of language data?
-;-> needed für build lamps!
-(defn- coverage-overall [coverage-by-language]
-  ;;TODO horribly wrong implementation -> will be fixed when more tests are added to core_test
-  (if (not (first coverage-by-language))
-    {}
-    (dissoc (first coverage-by-language) :language :day)))
+;-> needed for build lamps!
+(defn- coverage-overall [latest]
+  (let [[covered lines] (reduce sum-coverage [0 0] latest)
+        overall {:covered covered :lines lines}]
+    (assoc overall :percentage (coverage-percentage overall))))
 
 ;TODO allow time series query: coverage-data from to
 (defn project-coverage-statistics [coverage-data]
-  (let [by-language (:collect (reduce latest-coverage-data {:languages #{} :collect []} coverage-data))]
-    {:overall-coverage (coverage-overall by-language) :by-language by-language}))
+  (let [lastest-for-subproject (:collect (reduce latest-coverage-data latest-coverage-start-state coverage-data))]
+    (if (empty? lastest-for-subproject)
+      {:overall-coverage {}}
+      {:overall-coverage (coverage-overall lastest-for-subproject)})))
 
   ;TODO Write more tests!
 
