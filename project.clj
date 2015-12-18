@@ -5,7 +5,8 @@
             :url ""https://www.gnu.org/licenses/agpl-3.0.html""}
   :plugins [[lein-ring "0.9.6"]]
   :ring {:handler fdc-ts.core/handler
-         :init lobos.core/migrate}
+         :init lobos.core/migrate
+         :port 80}
   :main fdc-ts.core
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [liberator "0.13"]

@@ -99,6 +99,3 @@
 
 (def handler
   (-> app wrap-params))
-
-(defn -main [& args]
-  (run-jetty app {:port 443 :join? false}))
