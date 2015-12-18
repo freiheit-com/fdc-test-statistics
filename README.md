@@ -15,3 +15,10 @@ Only the last PUT of the day is remembered by the statistic server.
 
 Gives you the most recent coverage data for project `<project-name>`. Looks back at most 30 days.
 Aggregates coverage data over all subprojects and languages in `<project-name>`.
+
+
+#Build
+
+lein ring uberjar (needs https://github.com/weavejester/lein-ring)
+
+NOT lein uberjar (jars produced by this command do not contain the correct start code)
