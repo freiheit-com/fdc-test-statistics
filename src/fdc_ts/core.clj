@@ -101,4 +101,4 @@
   (-> app wrap-params))
 
 (defn -main [& args]
-  (run-jetty app {:port 10000 :join? false}))
+  (run-jetty app {:port 443 :join? false}))
