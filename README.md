@@ -8,6 +8,7 @@
 
 Only the last PUT of the day is remembered by the statistic server.
 
+TODO: /data/coverage will be changed to /publish/coverage
 
 ## Get latest coverage data:
     
