@@ -75,7 +75,10 @@
       {:overall-coverage {}}
       {:overall-coverage (coverage-overall lastest-for-subproject)})))
 
-  ;TODO Write more tests!
+;TODO Write more tests for project-coverage-statistics!
+;TODO Move coverage statistic calc to separate module
+;TODO Move put to separate module
+;TODO Register project-subproject (to prevent data pollution and make project lookup more efficient)
 
 (defresource put-coverage []
   :available-media-types ["application/json"]
@@ -87,12 +90,10 @@
   :available-media-types ["application/json"]
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
-;TODO
-;GET /statistic/coverage/<project-name> -> aggregate coverage-data for project <project-name>
-
 
 ;UI -> Beliebig baubar gegen die API, web-ui mit reagent o.ä.
 
+;TODO change /data/coverage -> /publish/coverage
 (defroutes app
   (PUT "/data/coverage" [] (put-coverage))
   (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project)))
