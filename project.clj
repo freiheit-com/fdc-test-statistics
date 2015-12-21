@@ -15,6 +15,7 @@
                  [liberator "0.13"]
                  [compojure "1.3.4"]
                  [ring "1.4.0"]
+                 [ring/ring-mock "0.3.0"]
                  [cheshire "5.5.0"]
                  [clj-time "0.8.0"]
                  [lobos "1.0.0-beta3"]

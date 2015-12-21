@@ -1,6 +1,6 @@
 (ns fdc-ts.core
   (:gen-class)
-  (:use [korma db core] fdc-ts.common fdc-ts.statistics.latest fdc-ts.db cheshire.core [clj-time [core :as t][coerce :as tc][format :as tf]] [ring.adapter.jetty])
+  (:use [korma db core] fdc-ts.common fdc-ts.config fdc-ts.statistics.latest fdc-ts.db cheshire.core [clj-time [core :as t][coerce :as tc][format :as tf]] [ring.adapter.jetty])
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
@@ -39,9 +39,17 @@
 ;TODO Move put to separate module
 ;TODO Register project-subproject (to prevent data pollution and make project lookup more efficient)
 
+(defn- auth-publish [ctx]
+  (= (:auth-token-publish *config*) (get-in ctx [:request :headers "auth-token"])))
+
+(defn- auth-publish-configured [_]
+  (:auth-token-publish *config*))
+
 (defresource put-coverage []
   :available-media-types ["application/json"]
   :allowed-methods [:put]
+  :service-available? auth-publish-configured
+  :authorized? auth-publish
   :put! (fn [ctx] (insert-coverage (get-json-body ctx))))
 
 (defresource get-project-coverage-statistic [project]
@@ -49,12 +57,10 @@
   :available-media-types ["application/json"]
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
-
 ;UI -> Beliebig baubar gegen die API, web-ui mit reagent o.ä.
 
-;TODO change /data/coverage -> /publish/coverage
 (defroutes app
-  (PUT "/data/coverage" [] (put-coverage))
+  (PUT "/publish/coverage" [] (put-coverage))
   (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project)))
 
 (def handler
