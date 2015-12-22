@@ -8,8 +8,9 @@
          :init lobos.core/migrate
          :ssl? true
          :ssl-port 8443
-         :keystore "/your/keystore.jks"
-         :key-password "your-keystore-password"}
+         :keystore "test_keystore.jks" ;YOU NEED TO CHANGE THIS IN PRODUCTION
+         :key-password "testpwd"} ;YOU NEED TO CHANGE THIS IN PRODUCTION
+  :jvm-opts ["-Dfdc.ts.config.file=test_config.clj"] ;YOU NEED TO CHANGE THIS IN PRODUCTION
   :main fdc-ts.core
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [liberator "0.13"]
