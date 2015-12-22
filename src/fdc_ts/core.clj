@@ -76,6 +76,9 @@
 (def auth-statistics (partial auth :auth-token-statistics))
 (def auth-statistics-configured (partial auth-configured :auth-token-statistics))
 
+(def auth-meta (partial auth :auth-token-meta))
+(def auth-meta-configured (partial auth-meta-configured :auth-token-meta))
+
 (defn- check-project-and-store-parsed-json [p ctx]
   (let [json (get-json-body ctx)] (if (not (p json)) false {:json json})))
 
@@ -94,10 +97,11 @@
   :authorized? auth-statistics
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
-;TODO auth meta
 (defresource put-project []
   :available-media-types ["application/json"]
   :allowed-methods [:put]
+  :service-available auth-meta-configured
+  :authorized? auth-meta
   :allowed? (partial check-project-and-store-parsed-json (comp not project-exists?))
   :put! (fn [ctx] (add-project (:json ctx))))
 
@@ -106,7 +110,6 @@
   (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project))
   (PUT ["/meta/project"] [] (put-project)))
   ;(GET ["/meta/projects"])) ;TODO GET META Data
-
 
 (def handler
   (-> app wrap-params))
