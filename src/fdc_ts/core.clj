@@ -7,6 +7,7 @@
             [compojure.route :as route]))
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
+;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
 
 (defentity coverage_data)
 
@@ -39,11 +40,17 @@
 ;TODO Move put to separate module
 ;TODO Register project-subproject (to prevent data pollution and make project lookup more efficient)
 
-(defn- auth-publish [ctx]
-  (= (:auth-token-publish *config*) (get-in ctx [:request :headers "auth-token"])))
+(defn- auth [token ctx]
+  (= (token *config*) (get-in ctx [:request :headers "auth-token"])))
 
-(defn- auth-publish-configured [_]
-  (:auth-token-publish *config*))
+(defn- auth-configured [token ctx]
+  (token *config*))
+
+(def auth-publish (partial auth :auth-token-publish))
+(def auth-publish-configured (partial auth-configured :auth-token-publish))
+
+(def auth-statistics (partial auth :auth-token-statistics))
+(def auth-statistics-configured (partial auth-configured :auth-token-statistics))
 
 (defresource put-coverage []
   :available-media-types ["application/json"]
@@ -53,8 +60,10 @@
   :put! (fn [ctx] (insert-coverage (get-json-body ctx))))
 
 (defresource get-project-coverage-statistic [project]
-  :allowed-methods [:get]
   :available-media-types ["application/json"]
+  :allowed-methods [:get]
+  :service-available? auth-statistics-configured
+  :authorized? auth-statistics
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
 ;UI -> Beliebig baubar gegen die API, web-ui mit reagent o.ä.

@@ -12,14 +12,39 @@
 
 ;;; handler test
 
+(def +test-config+ {:auth-token-publish "test-token-pub"
+                    :auth-token-statistics "test-token-stat"})
+
+(defn- with-invalid-token [request]
+  (mock/header request "auth-token" "invalid-token"))
+
+(defn- is-401-with-test-token [request]
+  (binding [*config* +test-config+]
+    (is (= (:status (handler (with-invalid-token request)))
+           401))))
+
+(defn- is-503-without-config [request]
+  (binding [*config* nil]
+    (is (= (:status (handler request))
+           503))))
+
+;;;; publish coverage
 (def put-publish-coverage (-> (mock/request :put "/publish/coverage" "{}") (mock/content-type "application/json")))
 
 (deftest should-reject-publish-coverage-request-without-wrong-auth-token
-  (binding [*config* {:auth-token-publish "test-token"}]
-    (is (= (:status (handler (mock/header put-publish-coverage "auth-token" "invalid-token")))
-           401))))
+  (is-401-with-test-token (with-invalid-token put-publish-coverage)))
 
-(deftest should-always-reject-if-auth-token-not-set
-  (binding [*config* nil]
-    (is (= (:status (handler put-publish-coverage))
-          503))))
+(deftest should-reject-publish-coverage-if-auth-token-not-set
+  (is-503-without-config put-publish-coverage))
+
+;;;; statistics
+
+(def get-statistic-latest (-> (mock/request :get "/statistics/coverage/latest/testproject")))
+
+(deftest should-reject-coverage-latest-if-wrong-auth-token
+  (is-401-with-test-token (with-invalid-token get-statistic-latest)))
+
+(deftest should-reject-coverage-latest-if-auth-token-not-set
+  (is-503-without-config get-statistic-latest))
+
+;TODO Write test for ok-handle (200) -> mock database out?
