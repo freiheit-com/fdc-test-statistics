@@ -1,6 +1,6 @@
 (ns fdc-ts.statistics.latest
   (:use fdc-ts.common)
-  (:require 
+  (:require
             [clj-time [core :as t][coerce :as tc][format :as tf]]))
 
 (def latest-coverage-start-state {:seen [] :collect []})

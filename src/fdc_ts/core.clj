@@ -9,7 +9,10 @@
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 ;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
 
-(defentity coverage_data)
+(defentity projects)
+
+(defentity coverage_data
+  (belongs-to projects))
 
 (defn- get-json-body [ctx]
   (parse-string (slurp (get-in ctx [:request :body])) true))
@@ -17,24 +20,45 @@
 (defn- add-today-timestamp [map]
   (assoc map :timestamp (t/today-at 00 00)))
 
-(defn- coverage-today [data]
-   (add-today-timestamp (select-keys data [:project :subproject :language])))
+(defn- coverage-query-today [data]
+  (add-today-timestamp {:projects.project (:project data)
+                        :projects.subproject (:subproject data)
+                        :projects.language (:language data)}))
 
 (defn- coverage-for-today-exist? [data]
-  (> (count (select coverage_data (where (coverage-today data)))) 0))
+  (> (count (select coverage_data
+                (with projects)
+                (where (coverage-query-today data)))) 0))
 
-;TODO Validate data!!!
+(defn- lookup-project [data]
+  (first (select projects (where {:project (:project data)
+                                  :subproject (:subproject data)
+                                  :language (:language data)}))))
+
+;TODO Validate data (lines, covered)!!!
 (defn- insert-coverage [data]
-  (if (coverage-for-today-exist? data)
-    (update coverage_data (set-fields data) (where (coverage-today data)))
-    (insert coverage_data (values (add-today-timestamp data)))))
+  (let [project (lookup-project data)
+        coverage-data (select-keys data [:covered :lines])]
+    (if (coverage-for-today-exist? data)
+      (update coverage_data (set-fields coverage-data) (where {:projects_id (:id project)}))
+      (insert coverage_data (values (add-today-timestamp (assoc coverage-data :projects_id (:id project))))))))
 
 (defn- select-latest-coverage-data [project]
   (let [end-today (t/today-at 23 59)]
-    (select coverage_data (where {:project project
+    (select coverage_data (with projects)
+                          (where {:projects.project project
                                   :timestamp [between [(t/minus end-today (t/months 1)) end-today]]})
                                   ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
                           (order :timestamp :DESC))))
+
+(def project-exists? (comp boolean lookup-project))
+
+;TODO link coverage data to project (instead of writing data again in table)
+;TODO Test-keystore mit test-pwd einchecken
+
+;TODO Validate data!!!
+(defn- add-project [data]
+  (insert projects (values (select-keys data [:project :subproject :language]))))
 
 ;TODO Move DB stuff to separate package
 ;TODO Move put to separate module
@@ -52,12 +76,16 @@
 (def auth-statistics (partial auth :auth-token-statistics))
 (def auth-statistics-configured (partial auth-configured :auth-token-statistics))
 
+(defn- check-project-and-store-parsed-json [p ctx]
+  (let [json (get-json-body ctx)] (if (not (p json)) false {:json json})))
+
 (defresource put-coverage []
   :available-media-types ["application/json"]
   :allowed-methods [:put]
   :service-available? auth-publish-configured
   :authorized? auth-publish
-  :put! (fn [ctx] (insert-coverage (get-json-body ctx))))
+  :allowed? (partial check-project-and-store-parsed-json project-exists?)
+  :put! (fn [ctx] (insert-coverage (:json ctx))))
 
 (defresource get-project-coverage-statistic [project]
   :available-media-types ["application/json"]
@@ -66,11 +94,19 @@
   :authorized? auth-statistics
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
-;UI -> Beliebig baubar gegen die API, web-ui mit reagent o.ä.
+;TODO auth meta
+(defresource put-project []
+  :available-media-types ["application/json"]
+  :allowed-methods [:put]
+  :allowed? (partial check-project-and-store-parsed-json (comp not project-exists?))
+  :put! (fn [ctx] (add-project (:json ctx))))
 
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
-  (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project)))
+  (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project))
+  (PUT ["/meta/project"] [] (put-project)))
+  ;(GET ["/meta/projects"])) ;TODO GET META Data
+
 
 (def handler
   (-> app wrap-params))
