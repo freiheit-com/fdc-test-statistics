@@ -2,6 +2,12 @@
 
 #REST-API:
 
+## Register a project
+
+    curl -kv -X PUT https://<servername>/meta/project -d '{"project": "<project-name>"", "subproject": "<subproject-name>", "language": "<language>"}' -H "Content-Type: application/json" -H "auth-token: <meta-auth-token>"
+
+Register (project, sub-project, language) with the statistic server. You may not publish data before registering.
+
 ## Store coverage data:
 
     curl -kv -X PUT https://<servername>/publish/coverage -d '{"lines": <n>, "covered": <m>, "project": "<project-name>", "subproject": "<subproject-name>", "language": "<language>"}' -H "Content-Type: application/json" -H "auth-token: <publish-auth-token>"
@@ -15,12 +21,11 @@ Only the last PUT of the day is remembered by the statistic server.
 Gives you the most recent coverage data for project `<project-name>`. Looks back at most 30 days.
 Aggregates coverage data over all subprojects and languages in `<project-name>`.
 
-## Register a project
+## Query all projects
 
-    curl -kv -X PUT https://<servername>/meta/project -d '{"project": "<project-name>"", "subproject": "<subproject-name>", "language": "<language>"}' -H "Content-Type: application/json" -H "auth-token: <meta-auth-token>"
+    curl -kv https://<servername>/meta/projects -H "Content-Type: application/json" -H "auth-token: <meta-auth-token>"
 
-Register (project, sub-project, language) with the statistic server. You may not publish data before registering.
-
+Return a list of all projects known by the statistic server (currently main projects only).
 
 #Build
 
