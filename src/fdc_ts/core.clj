@@ -1,10 +1,12 @@
 (ns fdc-ts.core
   (:gen-class)
-  (:use [korma db core] fdc-ts.common fdc-ts.config fdc-ts.statistics.latest fdc-ts.db cheshire.core [clj-time [core :as t][coerce :as tc][format :as tf]] [ring.adapter.jetty])
+  (:use fdc-ts.common fdc-ts.config fdc-ts.statistics.latest fdc-ts.db cheshire.core)
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
-            [compojure.route :as route]))
+            [compojure.route :as route]
+            [clj-time [core :as t][coerce :as tc][format :as tf]]
+            [korma.core :refer :all]))
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 ;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
