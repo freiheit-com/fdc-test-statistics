@@ -60,6 +60,18 @@
 (defn- add-project [data]
   (insert projects (values (select-keys data [:project :subproject :language]))))
 
+(defn- get-all-projects []
+  {:projects
+    (select projects
+      (fields :project)
+      (modifier "DISTINCT"))})
+
+;TODO Extend to this format:
+;-> {"projects": [{"project": "foo",
+;                  "subprojects": [{"subproject": "bar",
+;                                   "languages": [{"language": "java"}, {"language": "clojure"}]},
+;                                  {"subproject": "baz", "languages": ...})))
+
 ;TODO Move DB stuff to separate package
 ;TODO Move put to separate module
 ;TODO Register project-subproject (to prevent data pollution and make project lookup more efficient)
@@ -105,11 +117,18 @@
   :allowed? (partial check-project-and-store-parsed-json (comp not project-exists?))
   :put! (fn [ctx] (add-project (:json ctx))))
 
+(defresource get-projects []
+  :available-media-types ["application/json"]
+  :allowed-methods [:get]
+  :service-available auth-meta-configured
+  :authorized? auth-meta
+  :handle-ok (fn [_] (generate-string (get-all-projects))))
+
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
   (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project))
-  (PUT ["/meta/project"] [] (put-project)))
-  ;(GET ["/meta/projects"])) ;TODO GET META Data
+  (PUT ["/meta/project"] [] (put-project))
+  (GET ["/meta/projects"] [] (get-projects)))
 
 (def handler
   (-> app wrap-params))
