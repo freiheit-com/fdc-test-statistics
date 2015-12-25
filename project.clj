@@ -1,6 +1,6 @@
-(defproject fdc-test-statistics "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+(defproject fdc-test-statistics "0.5.0"
+  :description "lightweight test statistic data storage and aggregation"
+  :url "https://github.com/freiheit-com/fdc-test-statistics"
   :license {:name "GPLv3"
             :url ""https://www.gnu.org/licenses/agpl-3.0.html""}
   :plugins [[lein-ring "0.9.6"]]
