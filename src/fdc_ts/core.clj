@@ -55,9 +55,6 @@
 
 (def project-exists? (comp boolean lookup-project))
 
-;TODO link coverage data to project (instead of writing data again in table)
-;TODO Test-keystore mit test-pwd einchecken
-
 ;TODO Validate data!!!
 (defn- add-project [data]
   (insert projects (values (select-keys data [:project :subproject :language]))))
@@ -76,7 +73,6 @@
 
 ;TODO Move DB stuff to separate package
 ;TODO Move put to separate module
-;TODO Register project-subproject (to prevent data pollution and make project lookup more efficient)
 
 (defn- auth [token ctx]
   (= (token *config*) (get-in ctx [:request :headers "auth-token"])))
