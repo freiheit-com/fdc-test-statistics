@@ -18,8 +18,7 @@ Only the last PUT of the day is remembered by the statistic server.
 
     curl -v https://<servername>/statistics/coverage/latest/<project-name> -H "auth-token: <statistics-auth-token>"
 
-Gives you the most recent coverage data for project `<project-name>`. Looks back at most 30 days.
-Aggregates coverage data over all subprojects and languages in `<project-name>`.
+Provides you with the most recent coverage data for project `<project-name>`. Goes back max. 30 days into the past (in order to search for coverage-data). Aggregates coverage data throughout subprojects and languages in `<project-name>`.
 
 ## Query all projects
 
