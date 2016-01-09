@@ -1,6 +1,6 @@
 (ns fdc-ts.core
   (:gen-class)
-  (:use fdc-ts.common fdc-ts.config fdc-ts.statistics.latest fdc-ts.db cheshire.core)
+  (:use fdc-ts.common fdc-ts.config fdc-ts.statistics.latest fdc-ts.db fdc-ts.projects cheshire.core)
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
@@ -10,8 +10,6 @@
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 ;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
-
-(defentity projects)
 
 (defentity coverage_data
   (belongs-to projects))
@@ -32,11 +30,6 @@
                 (with projects)
                 (where (coverage-query-today data)))) 0))
 
-(defn- lookup-project [data]
-  (first (select projects (where {:project (:project data)
-                                  :subproject (:subproject data)
-                                  :language (:language data)}))))
-
 ;TODO Validate data (lines, covered)!!!
 (defn- insert-coverage [data]
   (let [project (lookup-project data)
@@ -52,24 +45,6 @@
                                   :timestamp [between [(t/minus end-today (t/months 1)) end-today]]})
                                   ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
                           (order :timestamp :DESC))))
-
-(def project-exists? (comp boolean lookup-project))
-
-;TODO Validate data!!!
-(defn- add-project [data]
-  (insert projects (values (select-keys data [:project :subproject :language]))))
-
-(defn- get-all-projects []
-  {:projects
-    (select projects
-      (fields :project)
-      (modifier "DISTINCT"))})
-
-;TODO Extend to this format:
-;-> {"projects": [{"project": "foo",
-;                  "subprojects": [{"subproject": "bar",
-;                                   "languages": [{"language": "java"}, {"language": "clojure"}]},
-;                                  {"subproject": "baz", "languages": ...})))
 
 ;TODO Move DB stuff to separate package
 ;TODO Move put to separate module
