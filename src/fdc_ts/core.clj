@@ -67,6 +67,10 @@
 (defn- check-project-and-store-parsed-json [p ctx]
   (let [json (get-json-body ctx)] (if (not (p json)) false {:json json})))
 
+;TODO Is there a way to parse data and store them in context before decision graph?
+;-> the first function implemented has to store data in ctx as a side effect
+;-> we can't parse twice, because the put-data a are stream that can only be read one time!
+
 (defresource put-coverage []
   :available-media-types ["application/json"]
   :allowed-methods [:put]
@@ -86,8 +90,9 @@
   :available-media-types ["application/json"]
   :allowed-methods [:put]
   :service-available auth-meta-configured
+  :malformed? (fn [ctx] (check-project-and-store-parsed-json (comp not validate-project-data) ctx))
   :authorized? auth-meta
-  :allowed? (partial check-project-and-store-parsed-json (comp not project-exists?))
+  :allowed? (fn [ctx] (not (project-exists? (:json ctx)))) ;(partial check-project-and-store-parsed-json (comp not project-exists?))
   :put! (fn [ctx] (add-project (:json ctx))))
 
 (defresource get-projects []
@@ -99,7 +104,7 @@
 
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
-  (GET ["/statistics/coverage/latest/:project" :project #"\w+"] [project] (get-project-coverage-statistic project))
+  (GET ["/statistics/coverage/latest/:project" :project +project-field-pattern+] [project] (get-project-coverage-statistic project))
   (PUT ["/meta/project"] [] (put-project))
   (GET ["/meta/projects"] [] (get-projects)))
 

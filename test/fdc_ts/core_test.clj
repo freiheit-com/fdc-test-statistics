@@ -12,16 +12,31 @@
 
 ;;; handler test
 
+(def +valid-statistic-token+ "test-token-stat")
+(def +valid-meta-token+ "test-token-meta")
+
 (def +test-config+ {:auth-token-publish "test-token-pub"
-                    :auth-token-statistics "test-token-stat"})
+                    :auth-token-statistics +valid-statistic-token+
+                    :auth-token-meta +valid-meta-token+})
+
+(defn- with-valid-statistic-token [request]
+  (mock/header request "auth-token" +valid-statistic-token+))
+
+(defn- with-valid-meta-token [request]
+  (mock/header request "auth-token" +valid-meta-token+))
 
 (defn- with-invalid-token [request]
   (mock/header request "auth-token" "invalid-token"))
 
-(defn- is-401-with-test-token [request]
+(defn- with-test-config [f]
   (binding [*config* +test-config+]
-    (is (= (:status (handler (with-invalid-token request)))
-           401))))
+    (f)))
+
+(defn- is-401-with-test-token [request]
+  (with-test-config
+    (fn []
+      (is (= (:status (handler (with-invalid-token request)))
+             401)))))
 
 (defn- is-503-without-config [request]
   (binding [*config* nil]
@@ -29,6 +44,7 @@
            503))))
 
 ;;;; publish coverage
+
 (def put-publish-coverage (-> (mock/request :put "/publish/coverage" "{}") (mock/content-type "application/json")))
 
 (deftest should-reject-publish-coverage-request-without-wrong-auth-token
@@ -47,4 +63,17 @@
 (deftest should-reject-coverage-latest-if-auth-token-not-set
   (is-503-without-config get-statistic-latest))
 
+(deftest should-reject-request-with-invalid-project-name
+  (with-test-config
+    (fn []
+      (is (not (:status (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/86invalid-project-name+")))))))))
+
+;;;; put-project
+
+(deftest should-reject-put-project-with-missing-project-and-subproject-name
+  (with-test-config
+    (fn []
+      (is (= (:status (handler (with-valid-meta-token (mock/request :put "/meta/project" "{\"language\": \"java\"}"))))
+             400)))))
+             
 ;TODO Write test for ok-handle (200) -> mock database out?

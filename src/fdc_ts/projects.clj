@@ -1,6 +1,8 @@
 (ns fdc-ts.projects
   (:require [korma.core :refer :all]))
 
+;; interfacing with db
+
 (defentity projects)
 
 (defn lookup-project [data]
@@ -20,8 +22,20 @@
       (fields :project)
       (modifier "DISTINCT"))})
 
-      ;TODO Extend to this format:)})
-      ;-> {"projects": [{"project": "foo",
-      ;                  "subprojects": [{"subproject": "bar",
-      ;                                   "languages": [{"language": "java"}, {"language": "clojure"}]},
-      ;                                  {"subproject": "baz", "languages": ...})))
+;TODO Extend to this format:
+;-> {"projects": [{"project": "foo",
+;                  "subprojects": [{"subproject": "bar",
+;                                   "languages": [{"language": "java"}, {"language": "clojure"}]},
+;                                  {"subproject": "baz", "languages": ...}
+
+;; validation
+
+(def +project-field-pattern+ #"[\w\-]+")
+
+(defn valid-project-field-string [str]
+  (and str (re-matches +project-field-pattern+ str)))
+
+(defn validate-project-data [project-data]
+   (and (valid-project-field-string (:project project-data))
+        (valid-project-field-string (:subproject project-data))
+        (valid-project-field-string (:language project-data))))
