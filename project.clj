@@ -13,7 +13,7 @@
   :jvm-opts ["-Dfdc.ts.config.file=test_config.clj"] ;YOU NEED TO CHANGE THIS IN PRODUCTION
   :main fdc-ts.core
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [liberator "0.13"]
+                 [liberator "0.14.0"]
                  [compojure "1.3.4"]
                  [ring "1.4.0"]
                  [ring/ring-mock "0.3.0"]

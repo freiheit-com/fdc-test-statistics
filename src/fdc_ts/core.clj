@@ -1,6 +1,6 @@
 (ns fdc-ts.core
   (:gen-class)
-  (:use fdc-ts.common fdc-ts.config fdc-ts.statistics.latest fdc-ts.db fdc-ts.projects cheshire.core)
+  (:use fdc-ts.common fdc-ts.db fdc-ts.config fdc-ts.statistics.latest fdc-ts.projects cheshire.core)
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
@@ -65,11 +65,19 @@
 (def auth-meta-configured (partial auth-meta-configured :auth-token-meta))
 
 (defn- check-project-and-store-parsed-json [p ctx]
-  (let [json (get-json-body ctx)] (if (not (p json)) false {:json json})))
+  (let [json (get-json-body ctx)]
+    (if (not (p json)) false {:json json})))
+
+(def project-malformed? (comp not validate-project-data :json))
+
+(defn- json-body [ctx]
+  {:json (get-json-body ctx)})
 
 ;TODO Is there a way to parse data and store them in context before decision graph?
 ;-> the first function implemented has to store data in ctx as a side effect
 ;-> we can't parse twice, because the put-data a are stream that can only be read one time!
+
+;-> TODO found in liberator 0.14! -> initialize-context -> rewrite put-coverage
 
 (defresource put-coverage []
   :available-media-types ["application/json"]
@@ -87,13 +95,14 @@
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
 (defresource put-project []
+  :initialize-context json-body
   :available-media-types ["application/json"]
   :allowed-methods [:put]
   :service-available auth-meta-configured
-  :malformed? (fn [ctx] (check-project-and-store-parsed-json (comp not validate-project-data) ctx))
+  :malformed? project-malformed?
   :authorized? auth-meta
-  :allowed? (fn [ctx] (not (project-exists? (:json ctx)))) ;(partial check-project-and-store-parsed-json (comp not project-exists?))
-  :put! (fn [ctx] (add-project (:json ctx))))
+  :allowed? (comp not project-exists? :json)
+  :put! (comp add-project :json))
 
 (defresource get-projects []
   :available-media-types ["application/json"]

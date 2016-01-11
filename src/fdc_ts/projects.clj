@@ -1,4 +1,5 @@
 (ns fdc-ts.projects
+  (:use fdc-ts.db)
   (:require [korma.core :refer :all]))
 
 ;; interfacing with db
@@ -12,9 +13,9 @@
 
 (def project-exists? (comp boolean lookup-project))
 
-;TODO Validate data!!!
 (defn add-project [data]
-  (insert projects (values (select-keys data [:project :subproject :language]))))
+    (println "data" data)
+    (insert projects (values (select-keys data [:project :subproject :language]))))
 
 (defn get-all-projects []
   {:projects
