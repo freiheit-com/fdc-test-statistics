@@ -64,27 +64,18 @@
 (def auth-meta (partial auth :auth-token-meta))
 (def auth-meta-configured (partial auth-meta-configured :auth-token-meta))
 
-(defn- check-project-and-store-parsed-json [p ctx]
-  (let [json (get-json-body ctx)]
-    (if (not (p json)) false {:json json})))
-
 (def project-malformed? (comp not validate-project-data :json))
 
 (defn- json-body [ctx]
   {:json (get-json-body ctx)})
 
-;TODO Is there a way to parse data and store them in context before decision graph?
-;-> the first function implemented has to store data in ctx as a side effect
-;-> we can't parse twice, because the put-data a are stream that can only be read one time!
-
-;-> TODO found in liberator 0.14! -> initialize-context -> rewrite put-coverage
-
 (defresource put-coverage []
+  :initialize-context json-body
   :available-media-types ["application/json"]
   :allowed-methods [:put]
   :service-available? auth-publish-configured
   :authorized? auth-publish
-  :allowed? (partial check-project-and-store-parsed-json project-exists?)
+  :allowed? (comp project-exists? :json)
   :put! (fn [ctx] (insert-coverage (:json ctx))))
 
 (defresource get-project-coverage-statistic [project]
