@@ -106,7 +106,8 @@
   (PUT "/publish/coverage" [] (put-coverage))
   (GET ["/statistics/coverage/latest/:project" :project +project-field-pattern+] [project] (get-project-coverage-statistic project))
   (PUT ["/meta/project"] [] (put-project))
-  (GET ["/meta/projects"] [] (get-projects)))
+  (GET ["/meta/projects"] [] (get-projects))
+  (route/files "/" {:root "ui"}))
 
 (def handler
   (-> app wrap-params))
