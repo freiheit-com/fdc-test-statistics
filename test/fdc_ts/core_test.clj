@@ -2,13 +2,28 @@
   (:require [clojure.test :refer :all]
             [fdc-ts.core :refer :all]
             [fdc-ts.config :refer :all]
-            [ring.mock.request :as mock]))
+            [ring.mock.request :as mock]
+            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
 ;;;- get-json-body
 
 (deftest should-parse-json-from-context
   (is (= (#'fdc-ts.core/get-json-body {:request {:body (new java.io.StringReader "{\"foo\": 23, \"bar\": \"blubb\"}")}})
          {:foo 23 :bar "blubb"})))
+
+;; previous-weekday
+
+(deftest should-be-friday-on-monday
+  (is (tp/friday? (#'fdc-ts.core/previous-weekday (t/date-time 2016 1 11)))))
+
+(deftest should-be-friday-on-sunday
+  (is (tp/friday? (#'fdc-ts.core/previous-weekday (t/date-time 2016 1 10)))))
+
+(deftest should-be-friday-on-saturday
+  (is (tp/friday? (#'fdc-ts.core/previous-weekday (t/date-time 2016 1 9)))))
+
+(deftest should-be-thursday-on-friday
+  (is (tp/thursday? (#'fdc-ts.core/previous-weekday (t/date-time 2016 1 8)))))
 
 ;;; handler test
 
@@ -75,5 +90,5 @@
     (fn []
       (is (= (:status (handler (with-valid-meta-token (mock/request :put "/meta/project" "{\"language\": \"java\"}"))))
              400)))))
-             
+
 ;TODO Write test for ok-handle (200) -> mock database out?

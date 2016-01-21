@@ -1,11 +1,11 @@
 (ns fdc-ts.core
   (:gen-class)
-  (:use fdc-ts.common fdc-ts.db fdc-ts.config fdc-ts.statistics.latest fdc-ts.projects cheshire.core)
+  (:use fdc-ts.common fdc-ts.db fdc-ts.config fdc-ts.statistics.latest fdc-ts.statistics.diff fdc-ts.projects cheshire.core)
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY GET PUT POST]]
             [compojure.route :as route]
-            [clj-time [core :as t][coerce :as tc][format :as tf]]
+            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]
             [korma.core :refer :all]))
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
@@ -38,13 +38,23 @@
       (update coverage_data (set-fields coverage-data) (where {:projects_id (:id project)}))
       (insert coverage_data (values (add-today-timestamp (assoc coverage-data :projects_id (:id project))))))))
 
+(defn- today-date []
+  (t/today-at 23 59))
+
+(defn- select-coverage-data-at [time project]
+   (select coverage_data (with projects)
+                         (where {:projects.project project
+                                 :timestamp [between [(t/minus time (t/months 1)) time]]})
+                                ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
+                         (order :timestamp :DESC)))
+
 (defn- select-latest-coverage-data [project]
-  (let [end-today (t/today-at 23 59)]
-    (select coverage_data (with projects)
-                          (where {:projects.project project
-                                  :timestamp [between [(t/minus end-today (t/months 1)) end-today]]})
-                                  ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
-                          (order :timestamp :DESC))))
+  (select-coverage-data-at (today-date) project))
+
+(defn- previous-weekday [date]
+  (cond (tp/monday? date) (t/minus date (t/days 3))
+        (tp/sunday? date) (t/minus date (t/days 2))
+        :else (t/minus date (t/days 1))))
 
 ;TODO Move DB stuff to separate package
 ;TODO Move put to separate module
@@ -85,6 +95,15 @@
   :authorized? auth-statistics
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
 
+(defresource get-project-coverage-diff [project]
+  :available-media-types ["application/json"]
+  :allowed-methods [:get]
+  :service-available? auth-statistics-configured
+  :authorized? auth-statistics
+  :handle-ok (fn [_] (generate-string (project-coverage-diff
+                                        (project-coverage-statistics (select-coverage-data-at (previous-weekday (today-date)) project))
+                                        (project-coverage-statistics (select-latest-coverage-data project))))))
+
 (defresource put-project []
   :initialize-context json-body
   :available-media-types ["application/json"]
@@ -105,6 +124,7 @@
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
   (GET ["/statistics/coverage/latest/:project" :project +project-field-pattern+] [project] (get-project-coverage-statistic project))
+  (GET ["/statistics/coverage/diff/:project" :project +project-field-pattern+] [project] (get-project-coverage-diff project))
   (PUT ["/meta/project"] [] (put-project))
   (GET ["/meta/projects"] [] (get-projects))
   (route/files "/" {:root "ui"}))
