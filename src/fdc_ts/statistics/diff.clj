@@ -2,14 +2,37 @@
   (:use fdc-ts.common)
   (:require [clj-time [core :as t][coerce :as tc][format :as tf]]))
 
-;TODO use lib function!
-(defn- round2
+(def ^:private null-coverage {:overall-coverage {:covered 0 :lines 0 :percentage 0.0}})
+
+;TODO use lib function!?
+(defn- round-to-precision
   "Round a double to the given precision (number of significant digits)"
   [precision d]
   (let [factor (Math/pow 10 precision)]
     (/ (Math/round (* d factor)) factor)))
 
-(defn project-coverage-diff [coverage-data-old coverage-data-new]
-  (cond (or (empty? coverage-data-old) (empty? coverage-data-new)) {}
-        :else {:diff-percentage (round2 3 (- (-> coverage-data-new :overall-coverage :percentage)
-                                             (-> coverage-data-old :overall-coverage :percentage)))}))
+(defn- coverage-field [coverage field]
+  (-> coverage :overall-coverage field))
+
+(defn- diff-percentage [old newd]
+  (round-to-precision 3 (- (coverage-field newd :percentage)
+                           (coverage-field old :percentage))))
+
+(defn- diff-lines [old newd]
+  (- (coverage-field newd :lines)
+     (coverage-field old :lines)))
+
+(defn- diff-covered [old newd]
+  (- (coverage-field newd :covered)
+     (coverage-field old :covered)))
+
+(defn- calc-diff [old newd]
+  {:diff-percentage (diff-percentage old newd)
+   :diff-lines (diff-lines old newd)
+   :diff-covered (diff-covered old newd)})
+
+(defn project-coverage-diff [old newd]
+  (cond (and (empty? old) (empty? newd)) (calc-diff null-coverage null-coverage)
+        (empty? old) (calc-diff null-coverage newd)
+        (empty? newd) (calc-diff old null-coverage)
+        :else (calc-diff old newd)))
