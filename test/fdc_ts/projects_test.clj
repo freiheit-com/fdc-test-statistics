@@ -1,6 +1,7 @@
 (ns fdc-ts.projects-test
   (:require [clojure.test :refer :all]
-            [fdc-ts.projects :refer :all]))
+            [fdc-ts.projects :refer :all]
+            [korma.core :as k]))
 
 (def +valid-project-data+ {:project "project-name_test" :subproject "subproject-name_test" :language "language-name_test"})
 (def +invalid-name+ "86#invalid-project-name+")
@@ -25,3 +26,22 @@
 
 (deftest should-accept-valid-project-definition
   (is (validate-project-data +valid-project-data+)))
+
+;; format-language
+
+(deftest should-format-languages
+  (let [_data {:project "foo" :subproject "bar" :language "forth"}]
+    (is (= {:language "forth"}))))
+
+
+;; format-subproject
+
+(deftest should-format-subprojects
+  (let [_data ["bar" [{:project "foo" :subproject "bar" :language "forth"}]]]
+    (is (= {:subproject "bar" :languages [{:language "forth"}]} (format-subproject _data)))))
+
+;; format-project
+
+(deftest should-format-projects
+  (let [_data ["foo" [{:project "foo" :subproject "bar" :language "forth"}]]]
+    (is (= {:project "foo" :subprojects [{:subproject "bar" :languages [{:language "forth"}]}]} (format-project _data)))))

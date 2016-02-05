@@ -7,6 +7,7 @@
   :ring {:handler fdc-ts.core/handler
          :init lobos.core/migrate
          :ssl? true
+         :nrepl {:start? true}
          :ssl-port 8443
          :keystore "test_keystore.jks" ;YOU NEED TO CHANGE THIS IN PRODUCTION
          :key-password "testpwd"} ;YOU NEED TO CHANGE THIS IN PRODUCTION

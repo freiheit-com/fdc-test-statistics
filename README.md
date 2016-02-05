@@ -39,7 +39,12 @@ Register (project, sub-project, language) with the statistic server. You may not
 
     curl -kv https://<servername>/meta/projects -H "Content-Type: application/json" -H "auth-token: <meta-auth-token>"
 
-Return a list of all projects known by the statistic server (currently main projects only).
+Return a list of all projects known by the statistic server in the format:
+-> {"projects": [{"project": "foo",
+                  "subprojects": [{"subproject": "bar",
+                                   "languages": [{"language": "java"}, {"language": "clojure"}]},
+                                  {"subproject": "baz", "languages": ...}"
+
 
 #Build
 

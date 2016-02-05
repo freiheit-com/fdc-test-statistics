@@ -1,33 +1,48 @@
 (ns fdc-ts.projects
   (:use fdc-ts.db)
-  (:require [korma.core :refer :all]))
+  (:require [korma.core :as sql]))
 
 ;; interfacing with db
 
-(defentity projects)
+(sql/defentity projects)
 
 (defn lookup-project [data]
-  (first (select projects (where {:project (:project data)
-                                  :subproject (:subproject data)
-                                  :language (:language data)}))))
+  (first (sql/select projects (sql/where {:project (:project data)
+                                          :subproject (:subproject data)
+                                          :language (:language data)}))))
 
 (def project-exists? (comp boolean lookup-project))
 
 (defn add-project [data]
     (println "data" data)
-    (insert projects (values (select-keys data [:project :subproject :language]))))
+    (sql/insert projects (sql/values (select-keys data [:project :subproject :language]))))
+
+(defn format-language
+  "formats raw data of a LANGUAGE"
+  [language]
+  (select-keys language [:language]))
+
+
+(defn format-subproject
+  "formats raw data of a SUBPROJECT"
+  [[name languages]]
+  {:subproject name :languages (map format-language languages)})
+
+
+(defn format-project
+  "formats raw data of a PROJECT"
+  [[name subprojects]]
+  {:project name :subprojects (map format-subproject (group-by :subproject subprojects))})
+
 
 (defn get-all-projects []
+  "Returns information about all registered projects in the following format:
+-> {\"projects\": [{\"project\": \"foo\",
+                  \"subprojects\": [{\"subproject\": \"bar\",
+                                   \"languages\": [{\"language\": \"java\"}, {\"language\": \"clojure\"}]},
+                                  {\"subproject\": \"baz\", \"languages\": ...}"
   {:projects
-    (select projects
-      (fields :project)
-      (modifier "DISTINCT"))})
-
-;TODO Extend to this format:
-;-> {"projects": [{"project": "foo",
-;                  "subprojects": [{"subproject": "bar",
-;                                   "languages": [{"language": "java"}, {"language": "clojure"}]},
-;                                  {"subproject": "baz", "languages": ...}
+    (map format-project (group-by :project (sql/select projects)))})
 
 ;; validation
 

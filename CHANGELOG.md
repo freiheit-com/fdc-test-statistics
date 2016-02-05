@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+-- expand meta/projects call with details
+
 ## [0.7.1] - 2016-01-23
 ### Added
 - line and covered diff data in /statistics/coverage/diff
