@@ -72,7 +72,7 @@
 (def auth-statistics-configured (partial auth-configured :auth-token-statistics))
 
 (def auth-meta (partial auth :auth-token-meta))
-(def auth-meta-configured (partial auth-meta-configured :auth-token-meta))
+(def auth-meta-configured (partial auth-configured :auth-token-meta))
 
 (def project-malformed? (comp not validate-project-data :json))
 
