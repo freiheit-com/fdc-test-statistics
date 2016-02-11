@@ -5,7 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
--- expand meta/projects call with details
+- expand meta/projects call with details
+- add call to fetch subproject and language coverage
+- refactoring the whole db layer
+- add h2 in memory db for tests
+- unit and integration tests
 
 ## [0.7.1] - 2016-01-23
 ### Added

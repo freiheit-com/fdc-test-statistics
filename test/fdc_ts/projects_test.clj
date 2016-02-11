@@ -1,7 +1,14 @@
 (ns fdc-ts.projects-test
+  (:use testdb)
   (:require [clojure.test :refer :all]
             [fdc-ts.projects :refer :all]
-            [korma.core :as k]))
+            [fdc-ts.statistics.testdata :refer :all]))
+
+(defn- setup
+  [test-suite]
+  (testdb/with-inmemory #(with-prepared-db test-suite)))
+
+(use-fixtures :once setup)
 
 (def +valid-project-data+ {:project "project-name_test" :subproject "subproject-name_test" :language "language-name_test"})
 (def +invalid-name+ "86#invalid-project-name+")
@@ -45,3 +52,33 @@
 (deftest should-format-projects
   (let [_data ["foo" [{:project "foo" :subproject "bar" :language "forth"}]]]
     (is (= {:project "foo" :subprojects [{:subproject "bar" :languages [{:language "forth"}]}]} (format-project _data)))))
+
+;; lookup-project
+
+(defn _projects-equal?
+  ""
+  [l r]
+  (and
+   (= (:project l) (:project r))
+   (= (:subproject l) (:subproject r))
+   (= (:language l) (:language r))))
+
+(deftest ^:integration should-find-project
+  (let [prj (lookup-project +first-project+)]
+    (is (true? (_projects-equal? +first-project+ prj)))))
+
+(deftest ^:integration should-find-project
+  (is (nil? (lookup-project {:project "not-existing"}))))
+
+
+;; add-project
+;; also tested through setup
+
+(deftest ^:integration shoud-add-new-project
+  (is (not (nil? (add-project {:language "none" :subproject "sub" :project "new"})))))
+
+;; get-all-projects
+
+(deftest ^:integration should-return-all-projects
+  (let [projects (get-all-projects)]
+    (is (= 4 (count (:projects projects))))))

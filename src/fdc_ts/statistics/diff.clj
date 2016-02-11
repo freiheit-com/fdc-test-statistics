@@ -31,8 +31,9 @@
    :diff-lines (diff-lines old newd)
    :diff-covered (diff-covered old newd)})
 
+(defn- null-if-empty
+  [cov]
+  (if (or (empty? cov) (empty? (:overall-coverage cov))) null-coverage cov))
+
 (defn project-coverage-diff [old newd]
-  (cond (and (empty? old) (empty? newd)) (calc-diff null-coverage null-coverage)
-        (empty? old) (calc-diff null-coverage newd)
-        (empty? newd) (calc-diff old null-coverage)
-        :else (calc-diff old newd)))
+  (calc-diff (null-if-empty old) (null-if-empty newd)))

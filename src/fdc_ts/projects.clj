@@ -6,16 +6,18 @@
 
 (sql/defentity projects)
 
-(defn lookup-project [data]
-  (first (sql/select projects (sql/where {:project (:project data)
-                                          :subproject (:subproject data)
-                                          :language (:language data)}))))
+(defn lookup-project [{:keys [project subproject language]}]
+  (first (sql/select projects (sql/where {:project project
+                                          :subproject subproject
+                                          :language language}))))
 
 (def project-exists? (comp boolean lookup-project))
 
-(defn add-project [data]
-    (println "data" data)
-    (sql/insert projects (sql/values (select-keys data [:project :subproject :language]))))
+(defn add-project [{:keys [:project :subproject :language] :as data}]
+  (println "data" data)
+  (sql/insert projects (sql/values {:project project
+                                    :subproject subproject
+                                    :language language})))
 
 (defn format-language
   "formats raw data of a LANGUAGE"

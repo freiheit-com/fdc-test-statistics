@@ -31,7 +31,8 @@
 
   ;TODO allow time series query: coverage-data from to
 (defn project-coverage-statistics [coverage-data]
-  (let [lastest-for-subproject (:collect (reduce latest-coverage-data latest-coverage-start-state coverage-data))]
-    (if (empty? lastest-for-subproject)
+  (let [latest-for-subproject (:collect (reduce latest-coverage-data latest-coverage-start-state coverage-data))]
+    (println latest-for-subproject)
+    (if (empty? latest-for-subproject)
         {:overall-coverage {}}
-        {:overall-coverage (coverage-overall lastest-for-subproject)})))
+        {:overall-coverage (coverage-overall latest-for-subproject)})))

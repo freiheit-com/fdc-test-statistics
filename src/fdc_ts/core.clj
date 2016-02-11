@@ -1,62 +1,47 @@
 (ns fdc-ts.core
   (:gen-class)
-  (:use fdc-ts.common fdc-ts.db fdc-ts.config fdc-ts.statistics.latest fdc-ts.statistics.diff fdc-ts.projects cheshire.core)
+  (:use fdc-ts.common
+        fdc-ts.db
+        fdc-ts.config
+        fdc-ts.statistics.latest
+        fdc-ts.statistics.diff
+        fdc-ts.statistics.db
+        fdc-ts.projects
+        cheshire.core)
   (:require [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
-            [compojure.core :refer [defroutes ANY GET PUT POST]]
+            [compojure.core :refer [defroutes ANY GET PUT POST context]]
             [compojure.route :as route]
-            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]
-            [korma.core :refer :all]))
+            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 ;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
 
-(defentity coverage_data
-  (belongs-to projects))
-
 (defn- get-json-body [ctx]
   (parse-string (slurp (get-in ctx [:request :body])) true))
 
-(defn- add-today-timestamp [map]
-  (assoc map :timestamp (t/today-at 00 00)))
-
-(defn- coverage-query-today [data]
-  (add-today-timestamp {:projects.project (:project data)
-                        :projects.subproject (:subproject data)
-                        :projects.language (:language data)}))
-
-(defn- coverage-for-today-exist? [data]
-  (> (count (select coverage_data
-                (with projects)
-                (where (coverage-query-today data)))) 0))
-
-;TODO Validate data (lines, covered)!!!
-(defn- insert-coverage [data]
-  (let [project (lookup-project data)
-        coverage-data (select-keys data [:covered :lines])]
-    (if (coverage-for-today-exist? data)
-      (update coverage_data (set-fields coverage-data) (where {:projects_id (:id project)}))
-      (insert coverage_data (values (add-today-timestamp (assoc coverage-data :projects_id (:id project))))))))
-
 (defn- today-date []
   (t/today-at 23 59))
-
-(defn- select-coverage-data-at [time project]
-   (select coverage_data (with projects)
-                         (where {:projects.project project
-                                 :timestamp [between [(t/minus time (t/months 1)) time]]})
-                                ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
-                         (order :timestamp :DESC)))
-
-(defn- select-latest-coverage-data [project]
-  (select-coverage-data-at (today-date) project))
 
 (defn- previous-weekday [date]
   (cond (tp/monday? date) (t/minus date (t/days 3))
         (tp/sunday? date) (t/minus date (t/days 2))
         :else (t/minus date (t/days 1))))
 
-;TODO Move DB stuff to separate package
+;; should be private, but we can't with-redefs-fn *and* refer to this by symbol at the same time
+(defn project-diff-date
+  "diffs statistics for PROJECT today and the given DATE"
+  [project date]
+  (let [old (project-coverage-statistics (select-coverage-data-at date project))
+        newd (project-coverage-statistics (select-latest-coverage-data project nil nil))]
+    (project-coverage-diff old newd)))
+
+(defn- project-diff-yesterday
+  "diffs statistics for PROJECT today and the last weekday"
+  [project]
+  (project-diff-date (previous-weekday (today-date))))
+
+
 ;TODO Move put to separate module
 
 (defn- auth [token ctx]
@@ -88,21 +73,19 @@
   :allowed? (comp project-exists? :json)
   :put! (fn [ctx] (insert-coverage (:json ctx))))
 
-(defresource get-project-coverage-statistic [project]
+(defresource get-project-coverage-statistic [project subproject language]
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project)))))
+  :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project subproject language)))))
 
 (defresource get-project-coverage-diff [project]
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (generate-string (project-coverage-diff
-                                        (project-coverage-statistics (select-coverage-data-at (previous-weekday (today-date)) project))
-                                        (project-coverage-statistics (select-latest-coverage-data project))))))
+  :handle-ok (fn [_] (generate-string (project-diff-yesterday project))))
 
 (defresource put-project []
   :initialize-context json-body
@@ -123,7 +106,14 @@
 
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
-  (GET ["/statistics/coverage/latest/:project" :project +project-field-pattern+] [project] (get-project-coverage-statistic project))
+  (context ["/statistics/coverage/latest/:project" :project +project-field-pattern+] [project]
+           (GET ["/"] []
+                (get-project-coverage-statistic project nil nil))
+           (context ["/:subproject" :subproject +project-field-pattern+] [subproject]
+                    (GET ["/"] []
+                         (get-project-coverage-statistic project subproject nil))
+                    (GET ["/:language" :language +project-field-pattern+] [language]
+                         (get-project-coverage-statistic project subproject language))))
   (GET ["/statistics/coverage/diff/:project" :project +project-field-pattern+] [project] (get-project-coverage-diff project))
   (PUT ["/meta/project"] [] (put-project))
   (GET ["/meta/projects"] [] (get-projects))

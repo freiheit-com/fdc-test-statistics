@@ -27,9 +27,13 @@
          {:diff-percentage 1.0 :diff-covered 1000 :diff-lines 1000})))
 
 (deftest should-calc-negative-diff-if-new-is-empty
-   (is (= (project-coverage-diff {:overall-coverage {:covered 1000 :lines 1000 :percentage 1.0}} {})
+  (is (= (project-coverage-diff {:overall-coverage {:covered 1000 :lines 1000 :percentage 1.0}} {})
           {:diff-percentage -1.0 :diff-covered -1000 :diff-lines -1000})))
 
 (deftest should-calc-zero-diff-if-both-are-empty
-   (is (= (project-coverage-diff {} {})
+  (is (= (project-coverage-diff {} {})
+          {:diff-covered 0 :diff-lines 0 :diff-percentage 0.0})))
+
+(deftest should-calc-zero-diff-if-both-are-empty-coverage
+   (is (= (project-coverage-diff {:overall-coverage {}} {:overall-coverage {}})
           {:diff-covered 0 :diff-lines 0 :diff-percentage 0.0})))

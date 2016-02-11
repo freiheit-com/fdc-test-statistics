@@ -1,7 +1,10 @@
 (ns fdc-ts.core-test
   (:require [clojure.test :refer :all]
-            [fdc-ts.core :refer :all]
+            [fdc-ts.core :as core :refer :all]
             [fdc-ts.config :refer :all]
+            [fdc-ts.statistics.testdata :refer :all]
+            [fdc-ts.projects :as projects]
+            [fdc-ts.statistics.db :as db]
             [ring.mock.request :as mock]
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
@@ -43,15 +46,14 @@
 (defn- with-invalid-token [request]
   (mock/header request "auth-token" "invalid-token"))
 
-(defn- with-test-config [f]
-  (binding [*config* +test-config+]
-    (f)))
+(defmacro with-test-config [body]
+  `(with-redefs [*config* +test-config+]
+    (~@body)))
 
 (defn- is-401-with-test-token [request]
   (with-test-config
-    (fn []
       (is (= (:status (handler (with-invalid-token request)))
-             401)))))
+             401))))
 
 (defn- is-503-without-config [request]
   (binding [*config* nil]
@@ -80,15 +82,75 @@
 
 (deftest should-reject-request-with-invalid-project-name
   (with-test-config
-    (fn []
-      (is (not (:status (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/86invalid-project-name+")))))))))
+      (is (not (:status (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/86invalid-project-name+"))))))))
 
 ;;;; put-project
 
 (deftest should-reject-put-project-with-missing-project-and-subproject-name
   (with-test-config
-    (fn []
       (is (= (:status (handler (with-valid-meta-token (mock/request :put "/meta/project" "{\"language\": \"java\"}"))))
-             400)))))
+             400))))
 
-;TODO Write test for ok-handle (200) -> mock database out?
+;; get-projects
+
+(deftest should-get-projects
+  (with-test-config
+    (with-redefs-fn {#'projects/get-all-projects (fn [] :valid-projects)}
+      #(let [response (handler (with-valid-meta-token (mock/request :get "/meta/projects")))]
+         (is (= 200 (:status response)))
+         (is (= "\"valid-projects\"" (:body response)))))))
+
+;; get-project-coverage-statistic
+
+(deftest should-get-project-coverage
+  (with-test-config
+    (with-redefs-fn {#'db/select-latest-coverage-data
+                     (fn [project & _]
+                       (is (= "test" project))
+                       +three-sub-project-data+)}
+      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/test")))]
+         (is (= 200 (:status response)))
+         (is (= +three-sub-project-expected-overall-coverage-json+ (:body response)))))))
+
+(deftest should-get-subproject-coverage
+  (with-test-config
+    (with-redefs-fn {#'db/select-latest-coverage-data
+                     (fn [project subproject & _]
+                       (is (= "test" project))
+                       (is (= "test-sub1" subproject))
+                       +three-sub-project-data+)}
+      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/test/test-sub1")))]
+         (is (= 200 (:status response)))
+         (is (= +three-sub-project-expected-overall-coverage-json+ (:body response)))))))
+
+(deftest should-get-language-coverage
+  (with-test-config
+    (with-redefs-fn {#'db/select-latest-coverage-data
+                     (fn [project subproject language & _]
+                       (is (= "test" project))
+                       (is (= "test-sub1" subproject))
+                       (is (= "java" language))
+                       (println "yep")
+                       +three-sub-project-data+)}
+      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/test/test-sub1/java")))]
+         (is (= 200 (:status response)))
+         (is (= +three-sub-project-expected-overall-coverage-json+ (:body response)))))))
+
+;; project-diff-date
+
+(deftest should-diff-dates
+  (with-redefs-fn {#'db/select-latest-coverage-data (fn [project & _]
+                                                      (println "nope")
+                                                      +three-sub-project-data+)
+                   #'db/select-coverage-data-at     (fn [project & _] +three-sub-project-diff+)}
+    #(is (= {:diff-percentage 0.025, :diff-lines 4, :diff-covered 500} (project-diff-date "test" (t/now))))))
+
+
+;; get-project-coverage-diff
+
+(deftest should-get-project-diff
+  (with-test-config
+    (with-redefs-fn {#'core/project-diff-date (fn [& _] :called)}
+      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test")))]
+         (is (= 200 (:status response)))
+         (is (= "\"called\"" (:body response)))))))

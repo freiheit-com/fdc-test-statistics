@@ -1,0 +1,53 @@
+# -*- restclient -*-
+#
+
+# List projects
+GET https://localhost:8443/meta/projects
+Content-Type: application/json
+auth-token: test
+
+# create projects
+PUT https://localhost:8443/meta/project
+Content-Type: application/json
+auth-token: test
+
+#
+{"project": "foo", "subproject": "baz", "language": "clojure"}
+{"project": "foo", "subproject": "bar", "language": "clojure"}
+{"project": "other", "subproject": "quux", "language": "clojure"}
+{"project": "foo", "subproject": "bar", "language": "javascript"}
+
+# publish for foo/bar/clojure
+PUT https://localhost:8443/publish/coverage
+Content-Type: application/json
+auth-token: test
+
+{"lines": 10, "covered": 4, "project": "foo", "subproject": "baz", "language": "clojure"}
+#{"lines": 10, "covered": 1, "project": "foo", "subproject": "bar", "language": "javascript"}
+#{"lines": 10, "covered": 1, "project": "foo", "subproject": "bar", "language": "clojure"}
+
+
+# get latest for foo
+GET https://localhost:8443/statistics/coverage/latest/foo
+Content-Type: application/json
+auth-token: test
+
+# get latest for foo/bar
+GET https://localhost:8443/statistics/coverage/latest/foo/bar
+Content-Type: application/json
+auth-token: test
+
+# get latest for foo/baz
+GET https://localhost:8443/statistics/coverage/latest/foo/baz
+Content-Type: application/json
+auth-token: test
+
+# get latest for foo/baz/clojure
+GET https://localhost:8443/statistics/coverage/latest/foo/baz/clojure
+Content-Type: application/json
+auth-token: test
+
+# get latest for foo/baz/javascript
+GET https://localhost:8443/statistics/coverage/latest/foo/bar/javascript
+Content-Type: application/json
+auth-token: test
