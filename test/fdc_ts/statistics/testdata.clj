@@ -21,11 +21,11 @@
 
 (def +coverage-entry-older-first-project+ (merge +coverage-data-older-first-project+ {:projects_id 1 :timestamp (tc/to-timestamp (t/yesterday))}))
 
-(def +coverage-old+ (merge +coverage-meta-first-project+ +coverage-data-older-first-project+))
 
 (def +coverage-meta-first-project+ {:language "java" :subproject "test-sub1"
                                :project "test" :timestamp "2015-12-03T00:00:00.000Z"})
 
+(def +coverage-old+ (merge +coverage-meta-first-project+ +coverage-data-older-first-project+))
 (def +coverage-first-project+ (merge +coverage-meta-first-project+ +coverage-data-first-project+))
 
 
