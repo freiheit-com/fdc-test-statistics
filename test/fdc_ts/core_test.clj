@@ -130,7 +130,6 @@
                        (is (= "test" project))
                        (is (= "test-sub1" subproject))
                        (is (= "java" language))
-                       (println "yep")
                        +three-sub-project-data+)}
       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/test/test-sub1/java")))]
          (is (= 200 (:status response)))
@@ -140,7 +139,6 @@
 
 (deftest should-diff-dates
   (with-redefs-fn {#'db/select-latest-coverage-data (fn [project & _]
-                                                      (println "nope")
                                                       +three-sub-project-data+)
                    #'db/select-coverage-data-at     (fn [project & _] +three-sub-project-diff+)}
     #(is (= {:diff-percentage 0.025, :diff-lines 4, :diff-covered 500} (project-diff-date "test" (t/now))))))
