@@ -2,20 +2,31 @@
   (:require [cheshire.core :as cheshire]
             [fdc-ts.projects :as projects]
             [fdc-ts.statistics.db :as coverage]
-            [korma.core :as k]))
+            [korma.core :as k]
+            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
 (def +first-project+ {:language "java" :subproject "test-sub1" :project "test"})
 (def +second-project+ {:language "java" :subproject "test-sub2" :project "test"})
 (def +third-project+ {:language "java" :subproject "test-sub3" :project "test"})
+(def +empty-subproject+ {:language "java" :subproject "test-sub4" :project "test"})
 (def +other-project+ {:language "java" :subproject "test-sub1" :project "other"})
 (def +empty-project+ {:language "java" :subproject "test-sub1" :project "empty"})
 
-(def +coverage-entry-first-project+ {:covered 472 :lines 1334})
+
+(def +coverage-data-first-project+ {:covered 472 :lines 1334})
+
+(def +coverage-entry-first-project+ (merge +coverage-data-first-project+ {:projects_id 1 :timestamp (tc/to-timestamp (t/today-at 00 00))}))
+
+(def +coverage-data-older-first-project+ {:covered 472 :lines 1334})
+
+(def +coverage-entry-older-first-project+ (merge +coverage-data-older-first-project+ {:projects_id 1 :timestamp (tc/to-timestamp (t/yesterday))}))
+
+(def +coverage-old+ (merge +coverage-meta-first-project+ +coverage-data-older-first-project+))
 
 (def +coverage-meta-first-project+ {:language "java" :subproject "test-sub1"
                                :project "test" :timestamp "2015-12-03T00:00:00.000Z"})
 
-(def +coverage-first-project+ (merge +coverage-meta-first-project+ +coverage-entry-first-project+))
+(def +coverage-first-project+ (merge +coverage-meta-first-project+ +coverage-data-first-project+))
 
 
 (def +three-sub-project-data+ [+coverage-first-project+
@@ -64,7 +75,8 @@
 
 (defn- insert-coverage
   []
-  (k/insert fdc-ts.statistics.db/coverage_data (k/values (fdc-ts.statistics.db/add-today-timestamp (assoc +coverage-entry-first-project+ :projects_id (:id (projects/lookup-project +coverage-first-project+)))))))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-entry-older-first-project+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-entry-first-project+)))
 
 
 (defn- insert-testdata
@@ -73,10 +85,14 @@
   (insert-coverage))
 
 
+(defn- reset-autoincrement
+  [table column]
+  (k/exec-raw (format "ALTER TABLE \"%s\" ALTER COLUMN \"%s\" RESTART WITH 1" table column)))
+
 (defn- drop-testdata []
   (k/delete fdc-ts.statistics.db/coverage_data)
   (k/delete projects/projects)
-  (comment (k/exec-raw (format "ALTER TABLE %s ALTER COLUMN %s RESTART WITH 1" "coverage_data" "projects_id"))))
+  (reset-autoincrement "projects" "id"))
 
 (defn with-prepared-db
   "inserts testdata into db"
