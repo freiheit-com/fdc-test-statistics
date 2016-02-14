@@ -15,7 +15,7 @@
   (-> coverage :overall-coverage field))
 
 (defn- diff-percentage [old newd]
-  (round-to-precision 3 (- (coverage-field newd :percentage)
+  (round-to-precision 4 (- (coverage-field newd :percentage)
                            (coverage-field old :percentage))))
 
 (defn- diff-lines [old newd]

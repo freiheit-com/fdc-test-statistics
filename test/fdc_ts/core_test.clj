@@ -28,6 +28,16 @@
 (deftest should-be-thursday-on-friday
   (is (tp/thursday? (#'fdc-ts.core/previous-weekday (t/date-time 2016 1 8)))))
 
+;; weekday-days-back
+
+(deftest should-be-the-same-as-previous-weekdays-with-one-day-back
+  (is (tp/friday? (#'fdc-ts.core/weekday-days-back (t/date-time 2010 8 7) 1)))
+  (is (tp/thursday? (#'fdc-ts.core/weekday-days-back (t/date-time 2016 1 8) 1))))
+
+(deftest should-go-back-three-working-days
+  (is (tp/wednesday? (#'fdc-ts.core/weekday-days-back (t/date-time 2010 8 7) 3)))
+  (is (tp/friday? (#'fdc-ts.core/weekday-days-back (t/date-time 2010 8 10) 3))))
+
 ;;; handler test
 
 (def +valid-statistic-token+ "test-token-stat")
@@ -141,14 +151,26 @@
   (with-redefs-fn {#'db/select-latest-coverage-data (fn [project & _]
                                                       +three-sub-project-data+)
                    #'db/select-coverage-data-at     (fn [project & _] +three-sub-project-diff+)}
-    #(is (= {:diff-percentage 0.025, :diff-lines 4, :diff-covered 500} (project-diff-date "test" (t/now))))))
-
+    #(is (= {:diff-percentage 0.0251, :diff-lines 4, :diff-covered 500} (project-diff-date "test" (t/now))))))
 
 ;; get-project-coverage-diff
 
-(deftest should-get-project-diff
+(deftest should-get-project-diff-if-days-are-not-supplied
   (with-test-config
     (with-redefs-fn {#'core/project-diff-date (fn [& _] :called)}
       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test")))]
          (is (= 200 (:status response)))
          (is (= "\"called\"" (:body response)))))))
+
+(deftest should-get-project-diff-with-supplied-days-back
+  (with-test-config
+    (with-redefs-fn {#'core/project-diff-date (fn [& _] :called)}
+      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test/days/4")))]
+          (is (= 200 (:status response)))
+          (is (= "\"called\"" (:body response)))))))
+
+(deftest should-not-be-found-if-illegal-day-supplied
+  (with-test-config
+    (with-redefs-fn {#'core/project-diff-date (fn [& _] :called)}
+       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test/days/invalidDay")))]
+          (is (= nil response))))))

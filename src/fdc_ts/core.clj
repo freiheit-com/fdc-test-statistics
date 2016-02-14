@@ -28,6 +28,9 @@
         (tp/sunday? date) (t/minus date (t/days 2))
         :else (t/minus date (t/days 1))))
 
+(defn- weekday-days-back [date days]
+  (previous-weekday (t/minus date (t/days (- days 1)))))
+
 ;; should be private, but we can't with-redefs-fn *and* refer to this by symbol at the same time
 (defn project-diff-date
   "diffs statistics for PROJECT today and the given DATE"
@@ -36,11 +39,10 @@
         newd (project-coverage-statistics (select-latest-coverage-data project nil nil))]
     (project-coverage-diff old newd)))
 
-(defn- project-diff-yesterday
-  "diffs statistics for PROJECT today and the last weekday"
-  [project]
-  (project-diff-date (previous-weekday (today-date))))
-
+(defn- project-diff-days
+  "diffs statistics for PROJECT between today and (- today days). Uses the last weekday."
+  [project days]
+  (project-diff-date project (weekday-days-back (today-date) days)))
 
 ;TODO Move put to separate module
 
@@ -80,12 +82,12 @@
   :authorized? auth-statistics
   :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project subproject language)))))
 
-(defresource get-project-coverage-diff [project]
+(defresource get-project-coverage-diff [project days]
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (generate-string (project-diff-yesterday project))))
+  :handle-ok (fn [_] (generate-string (project-diff-days project days))))
 
 (defresource put-project []
   :initialize-context json-body
@@ -114,7 +116,11 @@
                          (get-project-coverage-statistic project subproject nil))
                     (GET ["/:language" :language +project-field-pattern+] [language]
                          (get-project-coverage-statistic project subproject language))))
-  (GET ["/statistics/coverage/diff/:project" :project +project-field-pattern+] [project] (get-project-coverage-diff project))
+  (context ["/statistics/coverage/diff/:project" :project +project-field-pattern+] [project]
+           (GET ["/"] []
+                (get-project-coverage-diff project 1))
+           (context ["/days/:days" :days #"\d+"] [days]
+                    (get-project-coverage-diff project (Integer/parseInt days))))
   (PUT ["/meta/project"] [] (put-project))
   (GET ["/meta/projects"] [] (get-projects))
   (route/files "/" {:root "ui"}))
