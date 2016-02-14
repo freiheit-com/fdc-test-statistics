@@ -4,13 +4,15 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2016-02-14
 ### Added
 - expand meta/projects call with details
 - add call to fetch subproject and language coverage
-- refactoring the whole db layer
-- add h2 in memory db for tests
 - unit and integration tests
+- add h2 in memory db for tests
 - coverage diff can now go back arbitrary days (../coverage/diff/<project-name>/days/<day-to-go-back>)
+### Changed
+- refactoring the whole db layer
 
 ## [0.7.1] - 2016-01-23
 ### Added
