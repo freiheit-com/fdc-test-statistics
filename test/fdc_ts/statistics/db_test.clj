@@ -13,6 +13,11 @@
 
 ;; insert-coverage
 
+(deftest ^:integration should-not-insert-unknown
+  (let [non-existing {}
+        data (merge non-existing {:covered 23 :lines 42})]
+    (is (not (nil? (insert-coverage data))))))
+
 (deftest ^:integration should-insert
   (let [other +other-project+
         data (merge other {:covered 23 :lines 42})]
