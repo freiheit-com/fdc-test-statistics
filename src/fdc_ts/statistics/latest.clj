@@ -1,6 +1,6 @@
 (ns fdc-ts.statistics.latest
   (:use fdc-ts.common)
-  (:require
+  (:require [taoensso.timbre :refer [log logf]]
             [clj-time [core :as t][coerce :as tc][format :as tf]]))
 
 (def latest-coverage-start-state {:seen [] :collect []})
@@ -32,7 +32,7 @@
   ;TODO allow time series query: coverage-data from to
 (defn project-coverage-statistics [coverage-data]
   (let [latest-for-subproject (:collect (reduce latest-coverage-data latest-coverage-start-state coverage-data))]
-    (println latest-for-subproject)
+    (log :debug "formating coverage: " latest-for-subproject)
     (if (empty? latest-for-subproject)
         {:overall-coverage {}}
         {:overall-coverage (coverage-overall latest-for-subproject)})))

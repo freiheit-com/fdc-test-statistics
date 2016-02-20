@@ -2,6 +2,7 @@
   (:use fdc-ts.common
         fdc-ts.projects)
   (:require [korma.core :refer :all]
+            [taoensso.timbre :refer [log logf]]
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
 (defentity coverage_data
@@ -75,8 +76,8 @@
 (defn insert-coverage [data]
   (let [project (lookup-project data)
         coverage-data (select-keys data [:covered :lines])]
-    (println "project" project)
     (when project
+      (log :info "inserting coverage for project " project coverage-data)
       (if (coverage-for-today-exist? data)
         (update-coverage coverage-data project)
         (insert-new-coverage coverage-data project)))))

@@ -4,7 +4,8 @@
   :license {:name "GPLv3"
             :url ""https://www.gnu.org/licenses/agpl-3.0.html""}
   :plugins [[lein-ring "0.9.7"]]
-  :ring {:handler fdc-ts.core/handler
+  :ring {:port 3001
+         :handler fdc-ts.core/handler
          :init lobos.core/migrate
          :ssl? true
          :nrepl {:start? true}
@@ -43,5 +44,11 @@
                  [org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.nrepl "0.2.12"]
                  [org.xerial/sqlite-jdbc "3.8.9.1"]
-                 [ring "1.4.0"]
-                 [ring/ring-mock "0.3.0"]])
+                 [javax.servlet/javax.servlet-api "3.1.0"]
+                 [com.taoensso/timbre "4.2.1"]
+                 [ring/ring-core "1.4.0"]
+                 [ring/ring-servlet "1.4.0"]
+                 [ring/ring-jetty-adapter "1.4.0"]
+                 ;; [info.sunng/ring-jetty9-adapter "0.9.2"]
+                 [ring/ring-mock "0.3.0"]
+                 [ring-cors "0.1.7"]])

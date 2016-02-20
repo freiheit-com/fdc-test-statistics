@@ -1,6 +1,7 @@
 (ns fdc-ts.projects
   (:use fdc-ts.db)
-  (:require [korma.core :as sql]))
+  (:require [korma.core :as sql]
+            [taoensso.timbre :refer [log logf]]))
 
 ;; interfacing with db
 
@@ -14,7 +15,7 @@
 (def project-exists? (comp boolean lookup-project))
 
 (defn add-project [{:keys [:project :subproject :language] :as data}]
-  (println "data" data)
+  (log :info "adding project with " data)
   (sql/insert projects (sql/values {:project project
                                     :subproject subproject
                                     :language language})))
