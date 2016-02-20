@@ -104,11 +104,12 @@
 ;; get-projects
 
 (deftest should-get-projects
-  (with-test-config
-    (with-redefs-fn {#'projects/get-all-projects (fn [] :valid-projects)}
-      #(let [response (handler (with-valid-meta-token (mock/request :get "/meta/projects")))]
-         (is (= 200 (:status response)))
-         (is (= "\"valid-projects\"" (:body response)))))))
+  (let [valid-projects {:projects [{:project "foo" :subprojects [{:subproject "foo" :languages [{:language "foo"}]}]}]}]
+    (with-test-config
+      (with-redefs-fn {#'projects/get-all-projects (fn [] valid-projects)}
+        #(let [response (handler (with-valid-meta-token (mock/request :get "/meta/projects")))]
+           (is (= 200 (:status response)))
+           (is (= "{\"projects\":[{\"project\":\"foo\",\"subprojects\":[{\"subproject\":\"foo\",\"languages\":[{\"language\":\"foo\"}]}]}]}" (:body response))))))))
 
 ;; get-project-coverage-statistic
 

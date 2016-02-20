@@ -1,24 +1,26 @@
 (ns fdc-ts.core
   (:gen-class)
-  (:use fdc-ts.common
-        fdc-ts.db
-        fdc-ts.config
-        fdc-ts.statistics.latest
-        fdc-ts.statistics.diff
-        fdc-ts.statistics.db
-        fdc-ts.projects
-        cheshire.core)
-  (:require [liberator.core :refer [resource defresource]]
+  (:require [fdc-ts.common :refer :all]
+            [fdc-ts.db :refer :all]
+            [fdc-ts.config :refer :all]
+            [fdc-ts.statistics.latest :refer :all]
+            [fdc-ts.statistics.diff :refer :all]
+            [fdc-ts.statistics.db :refer :all]
+            [fdc-ts.projects :refer :all]
+            [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.cors :refer [wrap-cors]]
             [compojure.core :refer [defroutes ANY GET PUT POST context]]
             [compojure.route :as route]
-            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
+            [cheshire.core :as json]
+            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]
+            [schema.core :as s]))
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 ;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
 
 (defn- get-json-body [ctx]
-  (parse-string (slurp (get-in ctx [:request :body])) true))
+  (json/parse-string (slurp (get-in ctx [:request :body])) true))
 
 (defn- today-date []
   (t/today-at 23 59))
@@ -80,14 +82,14 @@
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project subproject language)))))
+  :handle-ok (fn [_] (json/generate-string (project-coverage-statistics (select-latest-coverage-data project subproject language)))))
 
 (defresource get-project-coverage-diff [project days]
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (generate-string (project-diff-days project days))))
+  :handle-ok (fn [_] (json/generate-string (project-diff-days project days))))
 
 (defresource put-project []
   :initialize-context json-body
@@ -104,19 +106,19 @@
   :allowed-methods [:get]
   :service-available auth-meta-configured
   :authorized? auth-meta
-  :handle-ok (fn [_] (generate-string (get-all-projects))))
+  :handle-ok (fn [_] (json/generate-string (s/validate Meta-Wire (get-all-projects)))))
 
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
-  (context ["/statistics/coverage/latest/:project" :project +project-field-pattern+] [project]
+  (context ["/statistics/coverage/latest/:project" :project +project-path-pattern+] [project]
            (GET ["/"] []
                 (get-project-coverage-statistic project nil nil))
-           (context ["/:subproject" :subproject +project-field-pattern+] [subproject]
+           (context ["/:subproject" :subproject +project-path-pattern+] [subproject]
                     (GET ["/"] []
                          (get-project-coverage-statistic project subproject nil))
-                    (GET ["/:language" :language +project-field-pattern+] [language]
+                    (GET ["/:language" :language +project-path-pattern+] [language]
                          (get-project-coverage-statistic project subproject language))))
-  (context ["/statistics/coverage/diff/:project" :project +project-field-pattern+] [project]
+  (context ["/statistics/coverage/diff/:project" :project +project-path-pattern+] [project]
            (GET ["/"] []
                 (get-project-coverage-diff project 1))
            (context ["/days/:days" :days #"\d+"] [days]
@@ -126,4 +128,7 @@
   (route/files "/" {:root "ui"}))
 
 (def handler
-  (-> app wrap-params))
+  (-> app
+      wrap-params
+      (wrap-cors :access-control-allow-origin [#"http://localhost:3449"]
+                 :access-control-allow-methods [:get :put :post :delete])))

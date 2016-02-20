@@ -1,6 +1,7 @@
 (ns fdc-ts.projects
   (:use fdc-ts.db)
   (:require [korma.core :as sql]
+            [schema.core :as s]
             [taoensso.timbre :refer [log logf]]))
 
 ;; interfacing with db
@@ -49,12 +50,5 @@
 
 ;; validation
 
-(def +project-field-pattern+ #"[\w\-]+")
-
-(defn valid-project-field-string [str]
-  (and str (re-matches +project-field-pattern+ str)))
-
 (defn validate-project-data [project-data]
-   (and (valid-project-field-string (:project project-data))
-        (valid-project-field-string (:subproject project-data))
-        (valid-project-field-string (:language project-data))))
+  (nil? (s/check Project-JSON project-data)))

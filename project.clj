@@ -46,6 +46,7 @@
                  [org.xerial/sqlite-jdbc "3.8.9.1"]
                  [javax.servlet/javax.servlet-api "3.1.0"]
                  [com.taoensso/timbre "4.2.1"]
+                 [prismatic/schema "1.0.5"]
                  [ring/ring-core "1.4.0"]
                  [ring/ring-servlet "1.4.0"]
                  [ring/ring-jetty-adapter "1.4.0"]

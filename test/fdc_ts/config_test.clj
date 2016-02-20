@@ -7,6 +7,6 @@
 
 (deftest should-read-property-file-if-configured
   (try
-    (System/setProperty +config-system-property+ "test/fdc_ts/testfiles/testconfig.clj")
+    (System/setProperty +config-system-property+ "test/fdc_ts/testfiles/testconfig.conf")
     (is (= (#'fdc-ts.config/read-config) {:auth-token-publish "publish-test-token"}))
     (finally (System/clearProperty +config-system-property+))))
