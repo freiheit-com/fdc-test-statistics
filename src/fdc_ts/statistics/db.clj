@@ -60,13 +60,23 @@
 (defn select-latest-coverage-data [project subproject language]
   (exec (build-select-coverage-data-at (today-date) project subproject language)))
 
-;TODO Validate data (lines, covered)!!!
+(defn- insert-new-coverage
+  "inserts a row into db for when COVERAGE-DATA does not yet exist in PROJECT"
+  [coverage-data project]
+  (let [insert-data (add-today-timestamp (assoc coverage-data :projects_id (:id project)))
+        id (insert coverage_data (values insert-data))]
+    id))
+
+(defn- update-coverage
+  "updates row in db with COVERAGE-DATA for PROJECT"
+  [coverage-data project]
+  (update coverage_data (set-fields coverage-data) (where {:projects_id (:id project)})))
+
 (defn insert-coverage [data]
   (let [project (lookup-project data)
         coverage-data (select-keys data [:covered :lines])]
-    (if (coverage-for-today-exist? data)
-      (update coverage_data (set-fields coverage-data) (where {:projects_id (:id project)}))
-      (let [insert-data (add-today-timestamp (assoc coverage-data :projects_id (:id project)))
-            id (insert coverage_data (values insert-data))]
-        (println "insert" insert-data id)
-        id))))
+    (println "project" project)
+    (when project
+      (if (coverage-for-today-exist? data)
+        (update-coverage coverage-data project)
+        (insert-new-coverage coverage-data project)))))
