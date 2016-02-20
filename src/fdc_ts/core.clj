@@ -6,19 +6,24 @@
         fdc-ts.statistics.latest
         fdc-ts.statistics.diff
         fdc-ts.statistics.db
-        fdc-ts.projects
-        cheshire.core)
+        fdc-ts.projects)
   (:require [liberator.core :refer [resource defresource]]
+            [cheshire.core :as json]
+            ;; [ring.adapter.jetty9 :as jetty]
             [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.cors :refer [wrap-cors]]
             [compojure.core :refer [defroutes ANY GET PUT POST context]]
             [compojure.route :as route]
+            [schema.core :as s]
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
 ;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
 ;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
 
+(def ^:dynamic *ws* (atom nil))
+
 (defn- get-json-body [ctx]
-  (parse-string (slurp (get-in ctx [:request :body])) true))
+  (json/parse-string (slurp (get-in ctx [:request :body])) true))
 
 (defn- today-date []
   (t/today-at 23 59))
@@ -61,7 +66,7 @@
 (def auth-meta (partial auth :auth-token-meta))
 (def auth-meta-configured (partial auth-configured :auth-token-meta))
 
-(def project-malformed? (comp not validate-project-data :json))
+(def project-malformed? #(s/check Project-JSON (:json %)))
 
 (defn- json-body [ctx]
   {:json (get-json-body ctx)})
@@ -80,14 +85,14 @@
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (generate-string (project-coverage-statistics (select-latest-coverage-data project subproject language)))))
+  :handle-ok (fn [_] (json/generate-string (project-coverage-statistics (select-latest-coverage-data project subproject language)))))
 
 (defresource get-project-coverage-diff [project days]
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (generate-string (project-diff-days project days))))
+  :handle-ok (fn [_] (json/generate-string (project-diff-days project days))))
 
 (defresource put-project []
   :initialize-context json-body
@@ -104,7 +109,7 @@
   :allowed-methods [:get]
   :service-available auth-meta-configured
   :authorized? auth-meta
-  :handle-ok (fn [_] (generate-string (get-all-projects))))
+  :handle-ok (fn [_] (s/validate Meta-Wire (json/generate-string (get-all-projects)))))
 
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
@@ -126,4 +131,20 @@
   (route/files "/" {:root "ui"}))
 
 (def handler
-  (-> app wrap-params))
+  (-> app
+      wrap-params
+      (wrap-cors :access-control-allow-origin [#"http://localhost:3449"] :access-control-allow-methods [:get :put :post :delete])))
+
+;; (def ws-handler
+;;   {:on-connect (fn [ws] (reset! *ws* ws)(jetty/send! ws "ohai"))
+;;    :on-text #(println %2)
+;;    :on-bytes #(println %2)
+;;    :on-close (fn [ws status reason] (reset! *ws* nil) (println status reason))
+;;    :on-error (fn [ws e] (reset! *ws* nil) (println e))})
+
+;; (jetty/run-jetty handler {:port 3001
+;;                     :ssl? true
+;;                     :ssl-port 8444
+;;                     :keystore "test_keystore.jks"
+;;                     :key-password "testpwd"
+;;                     :websockets {"/ws/" ws-handler}})
