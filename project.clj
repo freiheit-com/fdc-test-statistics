@@ -1,4 +1,4 @@
-(defproject fdc-test-statistics "0.8.0"
+(defproject fdc-test-statistics "0.9.0"
   :description "lightweight test statistic data storage and aggregation"
   :url "https://github.com/freiheit-com/fdc-test-statistics"
   :license {:name "GPLv3"
