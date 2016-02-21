@@ -8,10 +8,17 @@
 (defn- seen [data]
   [(:subproject data) (:language data)])
 
+(defn- parse-date [long-or-string]
+  (let [date (if (number? long-or-string)
+               (tc/from-long long-or-string)
+               (tf/parse long-or-string))]
+    (tf/unparse (tf/formatter "yyyy-MM-dd") date)))
+
+
 (defn- db-to-api-data [data]
   (assoc (select-keys data [:project :subproject :lines :covered :language])
-    :day (tf/unparse (tf/formatter "yyyy-MM-dd") (tf/parse (:timestamp data)))
-    :percentage (coverage-percentage data)))
+         :day (parse-date (:timestamp data))
+         :percentage (coverage-percentage data)))
 
 (defn- latest-coverage-data [state data]
   (if (some #(= % (seen data)) (:seen state))

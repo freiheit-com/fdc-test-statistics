@@ -29,9 +29,14 @@
 (defn- build-select-coverage-at
   "builds a query selecting coverage for PROJECT at TIME"
   [time project]
-  (where (build-select-coverage) {:projects.project project
-                                  ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
-                                  :timestamp [between (map tc/to-timestamp [(t/minus time (t/months 1)) time])]}))
+  ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
+  (let [range [(t/minus time (t/months 1)) time]
+        converted-range (mapv #(if (t/after? (t/date-midnight 2016 2 15) %) (tc/to-timestamp %) %) range)]
+    (log :error "asdf" converted-range)
+    (where (build-select-coverage) (and {:projects.project project}
+                                        (> :timestamp (first converted-range))
+                                        (< :timestamp (second converted-range))))))
+;; timestamps in entries older than 2016-02-16 are in UTC string format and won't be found with to-timestamp
 
 (defn- add-clause-if-not-nil
   ""
@@ -55,11 +60,13 @@
 
 (defn select-coverage-data-at
   "select coverage at TIME for PROJECT"
-  [time project]
-  (exec (build-select-coverage-data-at time project nil nil)))
+  ([time project]
+   (select-coverage-data-at time project nil nil))
+  ([time project subproject language]
+   (exec (build-select-coverage-data-at time project subproject language))))
 
 (defn select-latest-coverage-data [project subproject language]
-  (exec (build-select-coverage-data-at (today-date) project subproject language)))
+  (select-coverage-data-at (today-date) project subproject language))
 
 (defn- insert-new-coverage
   "inserts a row into db for when COVERAGE-DATA does not yet exist in PROJECT"

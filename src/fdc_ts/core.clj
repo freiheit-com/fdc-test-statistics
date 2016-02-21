@@ -7,6 +7,7 @@
             [fdc-ts.statistics.diff :refer :all]
             [fdc-ts.statistics.db :refer :all]
             [fdc-ts.projects :refer :all]
+            [taoensso.timbre :refer [log logf spy]]
             [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.cors :refer [wrap-cors]]
@@ -46,6 +47,11 @@
   [project days]
   (project-diff-date project (weekday-days-back (today-date) days)))
 
+(defn- handle-coverage-request
+  [time project subproject language]
+  (let [data (select-coverage-data-at time project subproject language)]
+    (json/generate-string (project-coverage-statistics data))))
+
 ;TODO Move put to separate module
 
 (defn- auth [token ctx]
@@ -77,12 +83,12 @@
   :allowed? (comp project-exists? :json)
   :put! (fn [ctx] (insert-coverage (:json ctx))))
 
-(defresource get-project-coverage-statistic [project subproject language]
+(defresource get-project-coverage-statistic [time project subproject language]
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
   :authorized? auth-statistics
-  :handle-ok (fn [_] (json/generate-string (project-coverage-statistics (select-latest-coverage-data project subproject language)))))
+  :handle-ok (fn [_] (handle-coverage-request time project subproject language)))
 
 (defresource get-project-coverage-diff [project days]
   :available-media-types ["application/json"]
@@ -112,12 +118,21 @@
   (PUT "/publish/coverage" [] (put-coverage))
   (context ["/statistics/coverage/latest/:project" :project +project-path-pattern+] [project]
            (GET ["/"] []
-                (get-project-coverage-statistic project nil nil))
+                (get-project-coverage-statistic (today-date) project nil nil))
            (context ["/:subproject" :subproject +project-path-pattern+] [subproject]
                     (GET ["/"] []
-                         (get-project-coverage-statistic project subproject nil))
+                         (get-project-coverage-statistic (today-date) project subproject nil))
                     (GET ["/:language" :language +project-path-pattern+] [language]
-                         (get-project-coverage-statistic project subproject language))))
+                         (get-project-coverage-statistic (today-date) project subproject language))))
+  (context ["/statistics/coverage/:time"] [time]
+           (context ["/:project" :project +project-path-pattern+] [project]
+                    (GET ["/"] []
+                         (get-project-coverage-statistic (tf/parse time) project nil nil))
+                    (context ["/:subproject" :subproject +project-path-pattern+] [subproject]
+                             (GET ["/"] []
+                                  (get-project-coverage-statistic (tf/parse time) project subproject nil))
+                             (GET ["/:language" :language +project-path-pattern+] [language]
+                                  (get-project-coverage-statistic (tf/parse time) project subproject language)))))
   (context ["/statistics/coverage/diff/:project" :project +project-path-pattern+] [project]
            (GET ["/"] []
                 (get-project-coverage-diff project 1))
