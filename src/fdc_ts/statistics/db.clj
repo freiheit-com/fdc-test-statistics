@@ -30,7 +30,7 @@
   "builds a query selecting coverage for PROJECT at TIME"
   [time project]
   ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
-  (let [range [(t/minus time (t/months 1)) time]
+  (let [range [(t/minus time (t/weeks 1)) time]
 
         converted-range (map tc/to-timestamp range)]
     (where (build-select-coverage) (and {:projects.project project
@@ -77,7 +77,7 @@
 (defn- update-coverage
   "updates row in db with COVERAGE-DATA for PROJECT"
   [coverage-data project]
-  (update coverage_data (set-fields coverage-data) (where {:projects_id (:id project)})))
+  (update coverage_data (set-fields coverage-data) (where (add-today-timestamp {:projects_id (:id project)}))))
 
 (defn insert-coverage [data]
   (let [project (lookup-project data)
