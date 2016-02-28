@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.2] - 2016-02-28
+## Fixed
+- overwrite of data on pushing twice on a day
+
 ## [0.8.0] - 2016-02-14
 ### Added
 - expand meta/projects call with details
