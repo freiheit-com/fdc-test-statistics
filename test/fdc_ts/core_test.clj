@@ -115,8 +115,8 @@
 
 (deftest should-get-project-coverage
   (with-test-config
-    (with-redefs-fn {#'db/select-latest-coverage-data
-                     (fn [project & _]
+    (with-redefs-fn {#'db/select-coverage-data-at
+                     (fn [_ project & _]
                        (is (= "test" project))
                        +three-sub-project-data+)}
       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/test")))]
@@ -125,8 +125,8 @@
 
 (deftest should-get-subproject-coverage
   (with-test-config
-    (with-redefs-fn {#'db/select-latest-coverage-data
-                     (fn [project subproject & _]
+    (with-redefs-fn {#'db/select-coverage-data-at
+                     (fn [_ project subproject & _]
                        (is (= "test" project))
                        (is (= "test-sub1" subproject))
                        +three-sub-project-data+)}
@@ -136,8 +136,8 @@
 
 (deftest should-get-language-coverage
   (with-test-config
-    (with-redefs-fn {#'db/select-latest-coverage-data
-                     (fn [project subproject language & _]
+    (with-redefs-fn {#'db/select-coverage-data-at
+                     (fn [_ project subproject language & _]
                        (is (= "test" project))
                        (is (= "test-sub1" subproject))
                        (is (= "java" language))
@@ -152,26 +152,26 @@
   (with-redefs-fn {#'db/select-latest-coverage-data (fn [project & _]
                                                       +three-sub-project-data+)
                    #'db/select-coverage-data-at     (fn [project & _] +three-sub-project-diff+)}
-    #(is (= {:diff-percentage 0.0251, :diff-lines 4, :diff-covered 500} (project-diff-date "test" (t/now))))))
+    #(is (= {:diff-percentage 0.023, :diff-lines 4, :diff-covered 458} (project-diff-date "test" (t/now))))))
 
 ;; get-project-coverage-diff
-
+; TODO rewrite tests with midje (to check correct date is actually called, not only project-diff-days function)
 (deftest should-get-project-diff-if-days-are-not-supplied
   (with-test-config
-    (with-redefs-fn {#'core/project-diff-date (fn [& _] :called)}
+    (with-redefs-fn {#'fdc-ts.core/project-diff-days (fn [& _] :called)}
       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test")))]
          (is (= 200 (:status response)))
          (is (= "\"called\"" (:body response)))))))
 
 (deftest should-get-project-diff-with-supplied-days-back
   (with-test-config
-    (with-redefs-fn {#'core/project-diff-date (fn [& _] :called)}
+    (with-redefs-fn {#'fdc-ts.core/project-diff-days (fn [& _] :called)}
       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test/days/4")))]
           (is (= 200 (:status response)))
           (is (= "\"called\"" (:body response)))))))
 
 (deftest should-not-be-found-if-illegal-day-supplied
   (with-test-config
-    (with-redefs-fn {#'core/project-diff-date (fn [& _] :called)}
+    (with-redefs-fn {#'fdc-ts.core/project-diff-days (fn [& _] :called)}
        #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test/days/invalidDay")))]
           (is (= nil response))))))

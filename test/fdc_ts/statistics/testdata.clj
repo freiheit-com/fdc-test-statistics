@@ -12,8 +12,7 @@
 (def +other-project+ {:language "java" :subproject "test-sub1" :project "other"})
 (def +empty-project+ {:language "java" :subproject "test-sub1" :project "empty"})
 
-
-(def +coverage-data-first-project+ {:covered 472 :lines 1334})
+(def +coverage-data-first-project+ {:covered 430 :lines 1334})
 
 (def +coverage-entry-first-project+ (merge +coverage-data-first-project+ {:projects_id 1 :timestamp (tc/to-timestamp (t/today-at 00 00))}))
 
@@ -23,7 +22,7 @@
 
 
 (def +coverage-meta-first-project+ {:language "java" :subproject "test-sub1"
-                               :project "test" :timestamp "2015-12-03T00:00:00.000Z"})
+                                    :project "test" :timestamp "2015-12-03T00:00:00.000Z"})
 
 (def +coverage-old+ (merge +coverage-meta-first-project+ +coverage-data-older-first-project+))
 (def +coverage-first-project+ (merge +coverage-meta-first-project+ +coverage-data-first-project+))
@@ -53,7 +52,7 @@
                                {:covered 500 :lines 9788, :language "java" :subproject "test-sub3"
                                 :project "test" :timestamp "2015-11-03T00:00:00.000Z"}])
 
-(def +three-sub-project-expected-overall-coverage+ {:overall-coverage {:covered 4972 :lines 19888 :percentage 0.25}})
+(def +three-sub-project-expected-overall-coverage+ {:overall-coverage {:covered 4930 :lines 19888 :percentage 0.2478881737731295}})
 
 (def +three-sub-project-expected-overall-coverage-json+ (cheshire/generate-string +three-sub-project-expected-overall-coverage+))
 

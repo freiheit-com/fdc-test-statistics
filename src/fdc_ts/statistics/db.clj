@@ -31,7 +31,6 @@
   [time project]
   ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
   (let [range [(t/minus time (t/weeks 1)) time]
-
         converted-range (map tc/to-timestamp range)]
     (where (build-select-coverage) (and {:projects.project project
                                          :timestamp [between converted-range]}))))
@@ -44,7 +43,6 @@
     (where query clause)
     query))
 
-
 (defn- build-select-coverage-data-at
   "selects coverage data of PROJECT since TIME"
   [time project subproject language]
@@ -56,7 +54,6 @@
 (defn- today-date []
   (t/today-at 23 59))
 
-
 (defn select-coverage-data-at
   "select coverage at TIME for PROJECT"
   ([time project]
@@ -67,17 +64,18 @@
 (defn select-latest-coverage-data [project subproject language]
   (select-coverage-data-at (today-date) project subproject language))
 
-(defn- insert-new-coverage
+(defn- insert-new-coverage-for-today
   "inserts a row into db for when COVERAGE-DATA does not yet exist in PROJECT"
   [coverage-data project]
   (let [insert-data (add-today-timestamp (assoc coverage-data :projects_id (:id project)))
         id (insert coverage_data (values insert-data))]
-    id))
+    :inserted))
 
-(defn- update-coverage
+(defn- update-todays-coverage
   "updates row in db with COVERAGE-DATA for PROJECT"
   [coverage-data project]
-  (update coverage_data (set-fields coverage-data) (where (add-today-timestamp {:projects_id (:id project)}))))
+  (update coverage_data (set-fields coverage-data) (where (add-today-timestamp {:projects_id (:id project)})))
+  :updated)
 
 (defn insert-coverage [data]
   (let [project (lookup-project data)
@@ -85,5 +83,5 @@
     (when project
       (log :info "inserting coverage for project " project coverage-data)
       (if (coverage-for-today-exist? data)
-        (update-coverage coverage-data project)
-        (insert-new-coverage coverage-data project)))))
+        (update-todays-coverage coverage-data project)
+        (insert-new-coverage-for-today coverage-data project)))))

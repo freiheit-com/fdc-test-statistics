@@ -14,7 +14,6 @@
                (tf/parse long-or-string))]
     (tf/unparse (tf/formatter "yyyy-MM-dd") date)))
 
-
 (defn- db-to-api-data [data]
   (assoc (select-keys data [:project :subproject :lines :covered :language])
          :day (parse-date (:timestamp data))

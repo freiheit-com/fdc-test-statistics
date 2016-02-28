@@ -9,24 +9,36 @@
   [test-suite]
   (testdb/with-inmemory #(with-prepared-db test-suite)))
 
-(use-fixtures :once setup)
+(use-fixtures :each setup)
 
 ;; insert-coverage
 
 (deftest ^:integration should-not-insert-unknown
   (let [non-existing {}
         data (merge non-existing {:covered 23 :lines 42})]
-    (is (nil? (insert-coverage data)))))
+    (is (= nil (insert-coverage data)))))
 
 (deftest ^:integration should-insert
   (let [other +other-project+
-        data (merge other {:covered 23 :lines 42})]
-    (is (not (nil? (insert-coverage data))))))
+        data-to-insert {:covered 23 :lines 42}
+        data (merge other data-to-insert)]
+    (is (= :inserted (insert-coverage data)))
+    (is (= (select-keys (first (select-latest-coverage-data (:project +other-project+) (:subproject +other-project+) (:language +other-project+)))
+                        [:covered :lines])
+           data-to-insert))))
 
 (deftest ^:integration should-update
-  (let [other +other-project+
-        data (merge other {:covered 24 :lines 42})]
-    (is (nil? (insert-coverage data)))))
+  (let [other +first-project+
+        new-coverage-data {:covered 24 :lines 42}
+        data (merge other new-coverage-data)]
+    (is (= :updated (insert-coverage data)))
+    (is (= (select-keys (first (select-latest-coverage-data (:project +first-project+) (:subproject +first-project+) (:language +first-project+)))
+                        [:covered :lines])
+           new-coverage-data))
+    ;we do not update older data by accident (bugfix test :)
+    (is (= (select-keys (first (select-coverage-data-at (t/yesterday) (:project +first-project+) (:subproject +first-project+) (:language +first-project+)))
+                        [:covered :lines])
+           +coverage-data-older-first-project+))))
 
 ;; coverage-for-today-exist?
 

@@ -10,7 +10,6 @@
 (korma-db/defdb db db-connection-info)
 (lobos/open-global db-connection-info)
 
-
 (def Meta-Wire {(s/required-key :projects)
                 [{(s/required-key :project) s/Str
                   (s/required-key :subprojects)
