@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.3] - 2016-02-29
+## Fixed
+- statistics date route
+
 ## [0.9.2] - 2016-02-28
 ## Fixed
 - overwrite of data on pushing twice on a day
