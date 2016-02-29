@@ -129,7 +129,7 @@
                 (get-project-coverage-diff project 1))
            (context ["/days/:days" :days #"\d+"] [days]
                 (get-project-coverage-diff project (Integer/parseInt days))))
-  (context ["/statistics/coverage/:time" :time #"^(?!diff).*$"] [time] ;the regex here is a tmp workaround, provide real time format or change route
+  (context ["/statistics/coverage/:time"] [time]
            (context ["/:project" :project +project-path-pattern+] [project]
                     (GET ["/"] []
                          (get-project-coverage-statistic (tf/parse time) project nil nil))

@@ -146,6 +146,20 @@
          (is (= 200 (:status response)))
          (is (= +three-sub-project-expected-overall-coverage-json+ (:body response)))))))
 
+;; get-project-coverage-date
+
+(deftest should-get-date-coverage
+  (with-test-config
+    (with-redefs-fn {#'db/select-coverage-data-at
+                     (fn [_ project & _]
+                       (is (= "test" project))
+                       +three-sub-project-data+)}
+      #(let [date (tf/unparse (:date tf/formatters) (t/yesterday))
+             url (str "/statistics/coverage/" date "/test")
+             response (handler (with-valid-statistic-token (mock/request :get url)))]
+         (is (= 200 (:status response)))
+         (is (= +three-sub-project-expected-overall-coverage-json+ (:body response)))))))
+
 ;; project-diff-date
 
 (deftest should-diff-dates
