@@ -2,10 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.10.0] - 2016-03-06
 ### Changed
 - Update to Clojure 1.8.0
 - /statistics/coverage/diff endpoint to /statistics/diff/coverage
+- Rewrite of project coverage aggregation: goes not arbitrary back in time and
+  is not limited to one week/month anymore.
 
 ## [0.9.3] - 2016-02-29
 ## Fixed

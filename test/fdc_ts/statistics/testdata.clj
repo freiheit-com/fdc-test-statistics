@@ -12,6 +12,8 @@
 (def +other-project+ {:language "java" :subproject "test-sub1" :project "other"})
 (def +empty-project+ {:language "java" :subproject "test-sub1" :project "empty"})
 
+
+
 (def +coverage-data-first-project+ {:covered 430 :lines 1334})
 
 (def +coverage-entry-first-project+ (merge +coverage-data-first-project+ {:projects_id 1 :timestamp (tc/to-timestamp (t/today-at 00 00))}))
@@ -65,18 +67,62 @@
 
 (def +three-sub-project-expected-diff+ {:diff-percentage 0.050 :diff-lines 0 :diff-covered 50})
 
+
+; test projects for selecting latest coverage data from db
+(def +select-latest-project-1+ {:language "java" :subproject "sub-test-latest-1" :project "test-latest-1"})
+(def +coverage-latest-project-1+ {:projects_id 6 :timestamp (tc/to-timestamp (t/date-time 2010 8 7)) :covered 56 :lines 786})
+
+(def +select-latest-project-2+ {:language "java" :subproject "sub-test-latest-2" :project "test-latest-2"})
+(def +coverage-latest-project-2-entry1+ {:projects_id 7 :timestamp (tc/to-timestamp (t/date-time 2010 6 1)) :covered 100 :lines 1000})
+(def +coverage-latest-project-2-entry2+ {:projects_id 7 :timestamp (tc/to-timestamp (t/date-time 2011 6 1)) :covered 200 :lines 2000})
+(def +coverage-latest-project-2-entry3+ {:projects_id 7 :timestamp (tc/to-timestamp (t/date-time 2012 6 1)) :covered 300 :lines 3000})
+
+(def +select-latest-project-3-1+ {:language "java" :subproject "sub-test-latest-3-1" :project "test-latest-3"})
+(def +select-latest-project-3-1-2+ {:language "clojure" :subproject "sub-test-latest-3-1" :project "test-latest-3"})
+(def +select-latest-project-3-1-3+ {:language "javascript" :subproject "sub-test-latest-3-1" :project "test-latest-3"})
+(def +select-latest-project-3-2+ {:language "clojure" :subproject "sub-test-latest-3-2" :project "test-latest-3"})
+(def +select-latest-project-3-3+ {:language "java" :subproject "sub-test-latest-3-3" :project "test-latest-3"})
+(def +select-latest-project-3-3-2+ {:language "clojure" :subproject "sub-test-latest-3-3" :project "test-latest-3"})
+(def +coverage-latest-project-3-1+ {:projects_id 8 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 1000 :lines 10000})
+(def +coverage-latest-project-3-1-2+ {:projects_id 9 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 1100 :lines 11000})
+(def +coverage-latest-project-3-1-3+ {:projects_id 10 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 1200 :lines 12000})
+(def +coverage-latest-project-3-2+ {:projects_id 11 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 2000 :lines 20000})
+(def +coverage-latest-project-3-3+ {:projects_id 12 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 3000 :lines 30000})
+(def +coverage-latest-project-3-3-2+ {:projects_id 13 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 3100 :lines 31000})
+
 (defn- insert-projects []
   (projects/add-project +first-project+)
   (projects/add-project +second-project+)
   (projects/add-project +third-project+)
   (projects/add-project +other-project+)
-  (projects/add-project +empty-project+))
+  (projects/add-project +empty-project+)
+
+  (projects/add-project +select-latest-project-1+)
+  (projects/add-project +select-latest-project-2+)
+
+  (projects/add-project +select-latest-project-3-1+)
+  (projects/add-project +select-latest-project-3-1-2+)
+  (projects/add-project +select-latest-project-3-1-3+)
+  (projects/add-project +select-latest-project-3-2+)
+  (projects/add-project +select-latest-project-3-3+)
+  (projects/add-project +select-latest-project-3-3-2+))
 
 (defn- insert-coverage
   []
   (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-entry-older-first-project+))
-  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-entry-first-project+)))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-entry-first-project+))
 
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-1+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-2-entry1+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-2-entry2+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-2-entry3+))
+
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-3-1+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-3-1-2+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-3-1-3+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-3-2+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-3-3+))
+  (k/insert fdc-ts.statistics.db/coverage_data (k/values +coverage-latest-project-3-3-2+)))
 
 (defn- insert-testdata
   []

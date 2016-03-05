@@ -115,7 +115,7 @@
 
 (deftest should-get-project-coverage
   (with-test-config
-    (with-redefs-fn {#'db/select-coverage-data-at
+    (with-redefs-fn {#'db/select-most-recent-coverages-at
                      (fn [_ project & _]
                        (is (= "test" project))
                        +three-sub-project-data+)}
@@ -125,7 +125,7 @@
 
 (deftest should-get-subproject-coverage
   (with-test-config
-    (with-redefs-fn {#'db/select-coverage-data-at
+    (with-redefs-fn {#'db/select-most-recent-coverages-at
                      (fn [_ project subproject & _]
                        (is (= "test" project))
                        (is (= "test-sub1" subproject))
@@ -136,7 +136,7 @@
 
 (deftest should-get-language-coverage
   (with-test-config
-    (with-redefs-fn {#'db/select-coverage-data-at
+    (with-redefs-fn {#'db/select-most-recent-coverages-at
                      (fn [_ project subproject language & _]
                        (is (= "test" project))
                        (is (= "test-sub1" subproject))
@@ -150,7 +150,7 @@
 
 (deftest should-get-date-coverage
   (with-test-config
-    (with-redefs-fn {#'db/select-coverage-data-at
+    (with-redefs-fn {#'db/select-most-recent-coverages-at
                      (fn [_ project & _]
                        (is (= "test" project))
                        +three-sub-project-data+)}
@@ -163,9 +163,9 @@
 ;; project-diff-date
 
 (deftest should-diff-dates
-  (with-redefs-fn {#'db/select-latest-coverage-data (fn [project & _]
+  (with-redefs-fn {#'db/select-most-recent-coverages (fn [project & _]
                                                       +three-sub-project-data+)
-                   #'db/select-coverage-data-at     (fn [project & _] +three-sub-project-diff+)}
+                   #'db/select-most-recent-coverages-at (fn [project & _] +three-sub-project-diff+)}
     #(is (= {:diff-percentage 0.023, :diff-lines 4, :diff-covered 458} (project-diff-date "test" (t/now))))))
 
 ;; get-project-coverage-diff

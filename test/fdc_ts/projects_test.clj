@@ -81,4 +81,4 @@
 
 (deftest ^:integration should-return-all-projects
   (let [projects (get-all-projects)]
-    (is (= 4 (count (:projects projects))))))
+    (is (= 7 (count (:projects projects))))))

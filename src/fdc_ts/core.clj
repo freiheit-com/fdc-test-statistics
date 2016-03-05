@@ -17,9 +17,6 @@
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]
             [schema.core :as s]))
 
-;DESIGN-Prinzip: Alles extrem simpel und einfach halten!!
-;DESGIN-Prinzip 2: Rest-API sollte über curl bedienbar sein
-
 (defn- get-json-body [ctx]
   (json/parse-string (slurp (get-in ctx [:request :body])) true))
 
@@ -38,8 +35,8 @@
 (defn project-diff-date
   "diffs statistics for PROJECT today and the given DATE"
   [project date]
-  (let [old (project-coverage-statistics (select-coverage-data-at date project))
-        newd (project-coverage-statistics (select-latest-coverage-data project nil nil))]
+  (let [old (project-coverage-statistics (select-most-recent-coverages-at date project :all :all))
+        newd (project-coverage-statistics (select-most-recent-coverages project :all :all))]
     (project-coverage-diff old newd)))
 
 (defn- project-diff-days
@@ -49,7 +46,7 @@
 
 (defn- handle-coverage-request
   [time project subproject language]
-  (let [data (select-coverage-data-at time project subproject language)]
+  (let [data (select-most-recent-coverages-at time project subproject language)]
     (json/generate-string (project-coverage-statistics data))))
 
 ;TODO Move put to separate module
@@ -119,20 +116,20 @@
 
   (context ["/statistics/coverage/latest/:project" :project +project-path-pattern+] [project]
            (GET ["/"] []
-                (get-project-coverage-statistic (today-date) project nil nil))
+                (get-project-coverage-statistic (today-date) project :all :all))
            (context ["/:subproject" :subproject +project-path-pattern+] [subproject]
                     (GET ["/"] []
-                         (get-project-coverage-statistic (today-date) project subproject nil))
+                         (get-project-coverage-statistic (today-date) project subproject :all))
                     (GET ["/:language" :language +project-path-pattern+] [language]
                          (get-project-coverage-statistic (today-date) project subproject language))))
 
   (context ["/statistics/coverage/:time"] [time]
            (context ["/:project" :project +project-path-pattern+] [project]
                     (GET ["/"] []
-                         (get-project-coverage-statistic (tf/parse time) project nil nil))
+                         (get-project-coverage-statistic (tf/parse time) project :all :all))
                     (context ["/:subproject" :subproject +project-path-pattern+] [subproject]
                              (GET ["/"] []
-                                  (get-project-coverage-statistic (tf/parse time) project subproject nil))
+                                  (get-project-coverage-statistic (tf/parse time) project subproject :all))
                              (GET ["/:language" :language +project-path-pattern+] [language]
                                   (get-project-coverage-statistic (tf/parse time) project subproject language)))))
 

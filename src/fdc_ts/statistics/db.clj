@@ -1,9 +1,11 @@
 (ns fdc-ts.statistics.db
   (:use fdc-ts.common
         fdc-ts.projects)
-  (:require [korma.core :refer :all]
+  (:require [clojure.set :as set]
+            [korma.core :refer :all]
             [taoensso.timbre :refer [log logf]]
-            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
+            [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]
+            [clojure.math.combinatorics :as combo]))
 
 (defentity coverage_data
   (belongs-to projects))
@@ -21,48 +23,80 @@
                 (with projects)
                 (where (coverage-query-today data))))))
 
-(defn- build-select-coverage []
-  (-> (select* coverage_data)
-      (with* projects #'identity)
-      (order :timestamp :DESC)))
-
-(defn- build-select-coverage-at
-  "builds a query selecting coverage for PROJECT at TIME"
-  [time project]
-  ;we look back at most one month to, to ensure O(1) time complexity for statistic calculation
-  (let [range [(t/minus time (t/weeks 1)) time]
-        converted-range (map tc/to-timestamp range)]
-    (where (build-select-coverage) (and {:projects.project project
-                                         :timestamp [between converted-range]}))))
-;; timestamps in entries older than 2016-02-16 are in UTC string format and won't be found with to-timestamp
-
-(defn- add-clause-if-not-nil
-  ""
-  [query test clause]
-  (if test
-    (where query clause)
-    query))
-
-(defn- build-select-coverage-data-at
-  "selects coverage data of PROJECT since TIME"
-  [time project subproject language]
-  (->
-   (build-select-coverage-at time project)
-   (add-clause-if-not-nil subproject {:projects.subproject subproject})
-   (add-clause-if-not-nil language {:projects.language language})))
-
 (defn- today-date []
   (t/today-at 23 59))
 
-(defn select-coverage-data-at
-  "select coverage at TIME for PROJECT"
-  ([time project]
-   (select-coverage-data-at time project nil nil))
-  ([time project subproject language]
-   (exec (build-select-coverage-data-at time project subproject language))))
+;; NEW coverage select
 
-(defn select-latest-coverage-data [project subproject language]
-  (select-coverage-data-at (today-date) project subproject language))
+(defn- select-most-recent-coverage-at-for-project
+  "selects the most recent coverage data for the supplied time-point.
+   project, subproject and language are here not optional."
+  [time project subproject language]
+  (first (select coverage_data
+            (with projects)
+            (fields :covered :lines)
+            (where {:projects.project project
+                    :projects.subproject subproject
+                    :projects.language language
+                    :timestamp [<= (tc/to-timestamp time)]})
+            (order :timestamp :DESC)
+            (limit 1))))
+;; timestamps in entries older than 2016-02-16 are in UTC string format and won't be found with to-timestamp
+
+(defn- resolve-all [project]
+  (set (map #(list (:project %) (:subproject %) (:language %))
+          (select projects
+            (fields :project :subproject :language)
+            (where {:project project})))))
+
+(defn- resolve-all-subprojects-for [project language]
+  (let [where-clause (if (= :all language) {:project project} {:project project :language language})]
+    (set (map :subproject (select projects
+                            (modifier "DISTINCT")
+                            (fields :subproject)
+                            (where where-clause))))))
+
+(defn- resolve-all-languages-for [project subproject]
+  (let [where-clause (if (= :all subproject) {:project project} {:project project :subproject subproject})]
+    (set (map :language (select projects
+                            (modifier "DISTINCT")
+                            (fields :language)
+                            (where where-clause))))))
+
+(defn- subproject-set [project subproject-spec language-spec]
+  (if (= :all subproject-spec)
+    (resolve-all-subprojects-for project language-spec)
+    #{subproject-spec}))
+
+(defn- language-set [project subproject-spec lang-spec]
+  (if (= :all lang-spec)
+    (resolve-all-languages-for project subproject-spec)
+    #{lang-spec}))
+
+(defn- project-selection [project subproject lang]
+  (if (and (= subproject :all) (= lang :all))
+    (resolve-all project)
+    (combo/cartesian-product #{project}
+                             (subproject-set project subproject lang)
+                             (language-set project subproject lang))))
+
+(defn select-most-recent-coverages-at
+  "selects the most recent coverage data for the supplied time-point.
+   subproject and language may be supplied as the special keyword :all, meaning
+   the coverage data should be aggregate across all subproject and languages.
+   The project is mandantory and may not use the :all keyword."
+  [time project subproject lang]
+  (let [selection (project-selection project subproject lang)]
+    (set/select #(not (= nil %)) (set (map (partial apply (partial select-most-recent-coverage-at-for-project time)) selection)))))
+
+(defn select-most-recent-coverages [project subproject language]
+  (select-most-recent-coverages-at (today-date) project subproject language))
+
+;TODO Alte, nicht mehr benutzte Funktionen entfernen!!!
+
+; END NEW COVERAGE SELECT
+
+
 
 (defn- insert-new-coverage-for-today
   "inserts a row into db for when COVERAGE-DATA does not yet exist in PROJECT"

@@ -1,4 +1,4 @@
-(defproject fdc-test-statistics "0.9.3"
+(defproject fdc-test-statistics "0.10.0"
   :description "lightweight test statistic data storage and aggregation"
   :url "https://github.com/freiheit-com/fdc-test-statistics"
   :license {:name "GPLv3"
@@ -30,7 +30,8 @@
                   refactor-nrepl.middleware/wrap-refactor]}
   :jvm-opts ["-Dfdc.ts.config.file=test_config.clj"] ;YOU NEED TO CHANGE THIS IN PRODUCTION
   :main fdc-ts.core
-  :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.12.0"]]}}
+  :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.12.0"]]
+                   :dependencies [[midje "1.8.3"]]}}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [acyclic/squiggly-clojure "0.1.4"]
                  [cheshire "5.5.0"]
@@ -50,6 +51,6 @@
                  [ring/ring-core "1.4.0"]
                  [ring/ring-servlet "1.4.0"]
                  [ring/ring-jetty-adapter "1.4.0"]
-                 ;; [info.sunng/ring-jetty9-adapter "0.9.2"]
                  [ring/ring-mock "0.3.0"]
-                 [ring-cors "0.1.7"]])
+                 [ring-cors "0.1.7"]
+                 [org.clojure/math.combinatorics "0.1.1"]])
