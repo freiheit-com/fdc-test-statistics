@@ -4,7 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Changed
-- /statistics/coverage/diff endpoint to /statistics/diff/coverage 
+- Update to Clojure 1.8.0
+- /statistics/coverage/diff endpoint to /statistics/diff/coverage
 
 ## [0.9.3] - 2016-02-29
 ## Fixed

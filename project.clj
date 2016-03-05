@@ -31,7 +31,8 @@
   :jvm-opts ["-Dfdc.ts.config.file=test_config.clj"] ;YOU NEED TO CHANGE THIS IN PRODUCTION
   :main fdc-ts.core
   :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.12.0"]]}}
-  :dependencies [[acyclic/squiggly-clojure "0.1.4"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [acyclic/squiggly-clojure "0.1.4"]
                  [cheshire "5.5.0"]
                  [cider/cider-nrepl "0.11.0-SNAPSHOT"]
                  [refactor-nrepl "2.0.0"]
@@ -41,7 +42,6 @@
                  [korma "0.4.0"]
                  [liberator "0.14.0"]
                  [lobos "1.0.0-beta3"]
-                 [org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.nrepl "0.2.12"]
                  [org.xerial/sqlite-jdbc "3.8.9.1"]
                  [javax.servlet/javax.servlet-api "3.1.0"]
