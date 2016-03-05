@@ -116,6 +116,7 @@
 
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
+
   (context ["/statistics/coverage/latest/:project" :project +project-path-pattern+] [project]
            (GET ["/"] []
                 (get-project-coverage-statistic (today-date) project nil nil))
@@ -124,11 +125,7 @@
                          (get-project-coverage-statistic (today-date) project subproject nil))
                     (GET ["/:language" :language +project-path-pattern+] [language]
                          (get-project-coverage-statistic (today-date) project subproject language))))
-  (context ["/statistics/coverage/diff/:project" :project +project-path-pattern+] [project]
-           (GET ["/"] []
-                (get-project-coverage-diff project 1))
-           (context ["/days/:days" :days #"\d+"] [days]
-                (get-project-coverage-diff project (Integer/parseInt days))))
+
   (context ["/statistics/coverage/:time"] [time]
            (context ["/:project" :project +project-path-pattern+] [project]
                     (GET ["/"] []
@@ -138,6 +135,13 @@
                                   (get-project-coverage-statistic (tf/parse time) project subproject nil))
                              (GET ["/:language" :language +project-path-pattern+] [language]
                                   (get-project-coverage-statistic (tf/parse time) project subproject language)))))
+
+  (context ["/statistics/diff/coverage/:project" :project +project-path-pattern+] [project]
+           (GET ["/"] []
+                (get-project-coverage-diff project 1))
+           (context ["/days/:days" :days #"\d+"] [days]
+                    (get-project-coverage-diff project (Integer/parseInt days))))
+
   (PUT ["/meta/project"] [] (put-project))
   (GET ["/meta/projects"] [] (get-projects))
   (route/files "/" {:root "ui"}))

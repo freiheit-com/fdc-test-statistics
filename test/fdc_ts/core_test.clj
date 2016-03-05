@@ -173,19 +173,19 @@
 (deftest should-get-project-diff-if-days-are-not-supplied
   (with-test-config
     (with-redefs-fn {#'fdc-ts.core/project-diff-days (fn [& _] :called)}
-      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test")))]
+      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/diff/coverage/test")))]
          (is (= 200 (:status response)))
          (is (= "\"called\"" (:body response)))))))
 
 (deftest should-get-project-diff-with-supplied-days-back
   (with-test-config
     (with-redefs-fn {#'fdc-ts.core/project-diff-days (fn [& _] :called)}
-      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test/days/4")))]
+      #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/diff/coverage/test/days/4")))]
           (is (= 200 (:status response)))
           (is (= "\"called\"" (:body response)))))))
 
 (deftest should-not-be-found-if-illegal-day-supplied
   (with-test-config
     (with-redefs-fn {#'fdc-ts.core/project-diff-days (fn [& _] :called)}
-       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/diff/test/days/invalidDay")))]
+       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/diff/coverage/test/days/invalidDay")))]
           (is (= nil response))))))

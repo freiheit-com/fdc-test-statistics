@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- /statistics/coverage/diff endpoint to /statistics/diff/coverage 
 
 ## [0.9.3] - 2016-02-29
 ## Fixed
