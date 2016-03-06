@@ -26,8 +26,6 @@
 (defn- today-date []
   (t/today-at 23 59))
 
-;; NEW coverage select
-
 (defn- select-most-recent-coverage-at-for-project
   "selects the most recent coverage data for the supplied time-point.
    project, subproject and language are here not optional."
@@ -91,12 +89,6 @@
 
 (defn select-most-recent-coverages [project subproject language]
   (select-most-recent-coverages-at (today-date) project subproject language))
-
-;TODO Alte, nicht mehr benutzte Funktionen entfernen!!!
-
-; END NEW COVERAGE SELECT
-
-
 
 (defn- insert-new-coverage-for-today
   "inserts a row into db for when COVERAGE-DATA does not yet exist in PROJECT"
