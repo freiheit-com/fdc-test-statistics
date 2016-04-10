@@ -14,7 +14,8 @@
                                           :language language}))))
 
 (defn lookup-main-project [{:keys [project language]}]
-  (lookup-project {:project project :language language}))
+  (first (sql/select projects (sql/where {:project project
+                                          :language language}))))
 
 (def project-exists? (comp boolean lookup-project))
 
