@@ -13,7 +13,13 @@
                                           :subproject subproject
                                           :language language}))))
 
+(defn lookup-main-project [{:keys [project language]}]
+  (first (sql/select projects (sql/where {:project project
+                                          :language language}))))
+
 (def project-exists? (comp boolean lookup-project))
+
+(def main-project-exists? (comp boolean lookup-main-project))
 
 (defn add-project [{:keys [:project :subproject :language] :as data}]
   (log :info "adding project with " data)

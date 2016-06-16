@@ -77,8 +77,10 @@
   :allowed-methods [:put]
   :service-available? auth-publish-configured
   :authorized? auth-publish
-  :allowed? (comp project-exists? :json)
-  :put! (fn [ctx] (insert-coverage (:json ctx))))
+  :allowed? (comp main-project-exists? :json)
+  :put! (fn [ctx] 
+          (when (not (project-exists? (:json ctx))) (add-project (:json ctx)))
+          (insert-coverage (:json ctx))))
 
 (defresource get-project-coverage-statistic [time project subproject language]
   :available-media-types ["application/json"]

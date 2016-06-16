@@ -67,7 +67,11 @@
   (let [prj (lookup-project +first-project+)]
     (is (true? (_projects-equal? +first-project+ prj)))))
 
-(deftest ^:integration should-find-project
+(deftest ^:integration should-find-main-project
+  (let [prj (lookup-main-project +first-project+)]
+    (is (true? (_projects-equal? +first-project+ prj)))))
+
+(deftest ^:integration should-not-find-project
   (is (nil? (lookup-project {:project "not-existing"}))))
 
 
