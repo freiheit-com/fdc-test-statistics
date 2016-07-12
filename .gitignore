@@ -13,3 +13,5 @@ pom.xml.asc
 keystore.jks
 database.db
 .DS_Store
+*.iml
+/.idea/
