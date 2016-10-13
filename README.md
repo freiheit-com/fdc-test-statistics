@@ -18,9 +18,9 @@ Provides you with the most recent coverage data for project `<project-name>`. Go
 
 ### Get coverage diff
 
-    curl -kv https://<servername>/statistics/coverage/diff/<project-name> -H "auth-token: <statistics-auth-token>"
+    curl -kv https://<servername>/statistics/diff/coverage/<project-name> -H "auth-token: <statistics-auth-token>"
 
-Returns a coverage diff in this JSON-format: `{"diff-percentage" 0.1, "diff-lines" 42, "diff-covered" 300}`
+Returns a coverage diff in this JSON-format: `{"diff-percentage": 0.1, "diff-lines": 42, "diff-covered": 300}`
 The diff is calculated between todays coverage data (as returned by `.../coverage/latest`) and the previous
 workdays coverage data. Workday is used under the assumption that coverage data will not change on a weekend :)
 
