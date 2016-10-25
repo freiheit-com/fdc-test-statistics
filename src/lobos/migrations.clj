@@ -1,7 +1,8 @@
 (ns lobos.migrations
   (:refer-clojure :exclude [alter drop
                             bigint boolean char double float time])
-  (:use [lobos migration core schema]))
+  (:use [lobos migration core schema])
+  (:require [lobos.connectivity :as lobos]))
 
 (defmigration add-project-table
   (up [] (create
@@ -21,3 +22,13 @@
               (integer :lines)
               (integer :covered))))
   (down [] (drop (table :coverage_data))))
+
+(defmigration add-active-col-to-project-table
+  (up [] (alter :add
+              (table :projects
+                     (boolean :active [:default true])))
+      (alter :modify
+              (table :projects
+                     (column :active [:default true])))
+      )
+  (down [] (alter :drop (table :projects (column :active)))))

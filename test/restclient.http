@@ -28,7 +28,7 @@ auth-token: test
 
 
 # get latest for foo
-GET https://localhost:8443/statistics/coverage/latest/foo
+GET https://localhost:8443/statistics/coverage/2016-02-17/hunter
 Content-Type: application/json
 auth-token: test
 

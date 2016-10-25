@@ -11,6 +11,7 @@
 (def +empty-subproject+ {:language "java" :subproject "test-sub4" :project "test"})
 (def +other-project+ {:language "java" :subproject "test-sub1" :project "other"})
 (def +empty-project+ {:language "java" :subproject "test-sub1" :project "empty"})
+(def +inactive-project+ {:language "java" :subproject "test-sub1" :project "inactive"})
 
 
 
@@ -96,6 +97,7 @@
   (projects/add-project +third-project+)
   (projects/add-project +other-project+)
   (projects/add-project +empty-project+)
+  (projects/add-project +inactive-project+)
 
   (projects/add-project +select-latest-project-1+)
   (projects/add-project +select-latest-project-2+)
