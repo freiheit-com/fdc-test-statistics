@@ -25,10 +25,9 @@
 
 (defmigration add-active-col-to-project-table
   (up [] (alter :add
-              (table :projects
-                     (boolean :active [:default true])))
+                (table :projects
+                       (boolean :active (default 1))))
       (alter :modify
-              (table :projects
-                     (column :active [:default true])))
-      )
+             (table :projects
+                    (column :active (default 1)))))
   (down [] (alter :drop (table :projects (column :active)))))
