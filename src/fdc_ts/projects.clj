@@ -11,7 +11,8 @@
 (defn lookup-project [{:keys [project subproject language]}]
   (first (sql/select projects (sql/where {:project project
                                           :subproject subproject
-                                          :language language}))))
+                                          :language language
+                                          :active true}))))
 
 (defn lookup-main-project [{:keys [project language]}]
   (first (sql/select projects (sql/where {:project project
@@ -26,6 +27,14 @@
   (sql/insert projects (sql/values {:project project
                                     :subproject subproject
                                     :language language})))
+
+(defn deactivate-project
+  "Mark the given PROJECT as inactive."
+  [project]
+  (sql/update projects
+              (sql/set-fields {:active false})
+              (sql/where {:project project})))
+
 
 (defn format-language
   "formats raw data of a LANGUAGE"
@@ -52,7 +61,7 @@
                                    \"languages\": [{\"language\": \"java\"}, {\"language\": \"clojure\"}]},
                                   {\"subproject\": \"baz\", \"languages\": ...}"
   {:projects
-    (map format-project (group-by :project (sql/select projects)))})
+   (map format-project (group-by :project (sql/select projects (sql/where {:active true}))))})
 
 ;; validation
 

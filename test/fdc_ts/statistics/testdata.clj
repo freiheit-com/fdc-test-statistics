@@ -11,6 +11,7 @@
 (def +empty-subproject+ {:language "java" :subproject "test-sub4" :project "test"})
 (def +other-project+ {:language "java" :subproject "test-sub1" :project "other"})
 (def +empty-project+ {:language "java" :subproject "test-sub1" :project "empty"})
+(def +inactive-project+ {:language "java" :subproject "test-sub1" :project "inactive"})
 
 
 
@@ -89,6 +90,8 @@
 (def +coverage-latest-project-3-2+ {:projects_id 11 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 2000 :lines 20000})
 (def +coverage-latest-project-3-3+ {:projects_id 12 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 3000 :lines 30000})
 (def +coverage-latest-project-3-3-2+ {:projects_id 13 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 3100 :lines 31000})
+(def +coverage-inactive-project {:projects_id 14 :timestamp (tc/to-timestamp (t/date-time 2016 3 3)) :covered 666 :lines 6666})
+
 
 (defn- insert-projects []
   (projects/add-project +first-project+)
@@ -105,7 +108,9 @@
   (projects/add-project +select-latest-project-3-1-3+)
   (projects/add-project +select-latest-project-3-2+)
   (projects/add-project +select-latest-project-3-3+)
-  (projects/add-project +select-latest-project-3-3-2+))
+  (projects/add-project +select-latest-project-3-3-2+)
+
+  (projects/add-project +inactive-project+))
 
 (defn- insert-coverage
   []

@@ -11,7 +11,7 @@
             [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.cors :refer [wrap-cors]]
-            [compojure.core :refer [defroutes ANY GET PUT POST context]]
+            [compojure.core :refer [defroutes ANY GET PUT POST DELETE context]]
             [compojure.route :as route]
             [cheshire.core :as json]
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]
@@ -38,6 +38,7 @@
   (let [old (project-coverage-statistics (select-most-recent-coverages-at date project :all :all))
         newd (project-coverage-statistics (select-most-recent-coverages project :all :all))]
     (project-coverage-diff old newd)))
+
 
 (defn- project-diff-days
   "diffs statistics for PROJECT between today and (- today days). Uses the last weekday."
@@ -113,6 +114,13 @@
   :authorized? auth-meta
   :handle-ok (fn [_] (json/generate-string (s/validate Meta-Wire (get-all-projects)))))
 
+(defresource delete-project [project]
+  :available-media-types ["application/json"]
+  :allowed-methods [:delete]
+  :service-available auth-meta-configured
+  :authorized? auth-meta
+  :delete! (deactivate-project project))
+
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
 
@@ -143,6 +151,7 @@
 
   (PUT ["/meta/project"] [] (put-project))
   (GET ["/meta/projects"] [] (get-projects))
+  (DELETE ["/meta/project/:project" :project +project-path-pattern+] [project] (delete-project project))
   (route/files "/" {:root "ui"}))
 
 (def handler

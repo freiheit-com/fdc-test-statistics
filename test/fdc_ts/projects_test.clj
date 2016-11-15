@@ -2,7 +2,8 @@
   (:use testdb)
   (:require [clojure.test :refer :all]
             [fdc-ts.projects :refer :all]
-            [fdc-ts.statistics.testdata :refer :all]))
+            [fdc-ts.statistics.testdata :refer :all]
+            [taoensso.timbre :refer [spy log]]))
 
 (defn- setup
   [test-suite]
@@ -38,7 +39,7 @@
 
 (deftest should-format-languages
   (let [_data {:project "foo" :subproject "bar" :language "forth"}]
-    (is (= {:language "forth"}))))
+    (is (= {:language "forth"} (format-language _data)))))
 
 
 ;; format-subproject
@@ -86,3 +87,17 @@
 (deftest ^:integration should-return-all-projects
   (let [projects (get-all-projects)]
     (is (= 7 (count (:projects projects))))))
+
+;; deactivate-project
+
+(deftest ^:integration should-mark-project-as-inactive
+  (let [prj (lookup-project +inactive-project+)
+        prj-name (:project prj)]
+    (is (= prj-name (:project +inactive-project+)))
+    (deactivate-project prj-name)
+    (is (nil? (lookup-project +inactive-project+)))))
+
+(deftest ^:integration should-not-return-inactive-projects
+  (let [projects (get-all-projects)]
+    (doseq [projects projects] (log :error projects))
+    (is (= 7 (count (spy :error (:projects projects)))))))
