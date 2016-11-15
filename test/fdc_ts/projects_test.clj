@@ -39,7 +39,7 @@
 
 (deftest should-format-languages
   (let [_data {:project "foo" :subproject "bar" :language "forth"}]
-    (is (= {:language "forth"}))))
+    (is (= {:language "forth"} (format-language _data)))))
 
 
 ;; format-subproject
@@ -86,7 +86,7 @@
 
 (deftest ^:integration should-return-all-projects
   (let [projects (get-all-projects)]
-    (is (= 8 (count (:projects projects))))))
+    (is (= 7 (count (:projects projects))))))
 
 ;; deactivate-project
 
