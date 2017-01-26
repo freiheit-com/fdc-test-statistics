@@ -11,3 +11,6 @@
       (edn/read-string (slurp config-file)))))
 
 (def ^:dynamic *config* (read-config))
+
+(defn get-property [token]
+  (token *config*))

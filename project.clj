@@ -6,7 +6,7 @@
   :plugins [[lein-ring "0.9.7"]]
   :ring {:port 3001
          :handler fdc-ts.core/handler
-         :init lobos.core/migrate
+         :init fdc-ts.migrations/migrate
          :ssl? true
          :nrepl {:start? true}
          :ssl-port 8443
@@ -42,11 +42,13 @@
                  [compojure "1.3.4"]
                  [korma "0.4.0"]
                  [liberator "0.14.0"]
-                 [lobos "1.0.0-beta3"]
+                 [mysql/mysql-connector-java "5.1.38"]
+                 [migratus "0.8.13"]
+                 ;[org.xerial/sqlite-jdbc "3.8.9.1"]
                  [org.clojure/tools.nrepl "0.2.12"]
-                 [org.xerial/sqlite-jdbc "3.8.9.1"]
                  [javax.servlet/javax.servlet-api "3.1.0"]
                  [com.taoensso/timbre "4.2.1"]
+                 [com.fzakaria/slf4j-timbre "0.3.2"]
                  [prismatic/schema "1.0.5"]
                  [ring/ring-core "1.4.0"]
                  [ring/ring-servlet "1.4.0"]
