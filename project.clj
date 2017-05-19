@@ -3,15 +3,14 @@
   :url "https://github.com/freiheit-com/fdc-test-statistics"
   :license {:name "GPLv3"
             :url ""https://www.gnu.org/licenses/agpl-3.0.html""}
-  :plugins [[lein-ring "0.9.7"]]
+  :plugins [[lein-ring "0.9.7"]
+            [lein-environ "1.1.0"]]
   :ring {:port 3001
          :handler fdc-ts.core/handler
          :init fdc-ts.migrations/migrate
          :ssl? true
          :nrepl {:start? true}
-         :ssl-port 8443
-         :keystore "test_keystore.jks" ;YOU NEED TO CHANGE THIS IN PRODUCTION
-         :key-password "testpwd"} ;YOU NEED TO CHANGE THIS IN PRODUCTION
+         :ssl-port 8443}
   :repl-options {:nrepl-middleware
                  [cider.nrepl.middleware.apropos/wrap-apropos
                   cider.nrepl.middleware.classpath/wrap-classpath
@@ -31,11 +30,21 @@
   :jvm-opts ["-Dfdc.ts.config.file=test_config.clj"] ;YOU NEED TO CHANGE THIS IN PRODUCTION
   :main fdc-ts.core
   :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.12.0"]]
-                   :dependencies [[midje "1.8.3"]]}}
+                   :dependencies [[midje "1.8.3"]
+                                  [cider/cider-nrepl "0.11.0-SNAPSHOT"]]
+                   :env {:auth-token-publish "test-token-pub"
+                         :auth-token-statistics "test-token-stat"
+                         :auth-token-meta "test-token-meta"
+                         :db-host "localhost"
+                         :db-port "3306"
+                         :db-schema "fdc-test-statistic"
+                         :db-user "test"
+                         :db-pass "test"
+                         :keystore "test_keystore.jks"
+                         :key-password "testpwd"}}}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [acyclic/squiggly-clojure "0.1.4"]
                  [cheshire "5.5.0"]
-                 [cider/cider-nrepl "0.11.0-SNAPSHOT"]
                  [refactor-nrepl "2.0.0"]
                  [clj-time "0.8.0"]
                  [com.h2database/h2 "1.4.191"]
@@ -55,4 +64,5 @@
                  [ring/ring-jetty-adapter "1.4.0"]
                  [ring/ring-mock "0.3.0"]
                  [ring-cors "0.1.7"]
-                 [org.clojure/math.combinatorics "0.1.1"]])
+                 [org.clojure/math.combinatorics "0.1.1"]
+                 [environ "1.1.0"]])
