@@ -2,11 +2,11 @@
   (:gen-class)
   (:require [fdc-ts.common :refer :all]
             [fdc-ts.db :refer :all]
-            [fdc-ts.config :refer :all]
             [fdc-ts.statistics.latest :refer :all]
             [fdc-ts.statistics.diff :refer :all]
             [fdc-ts.statistics.db :refer :all]
             [fdc-ts.projects :refer :all]
+            [environ.core :refer [env]]
             [taoensso.timbre :refer [log logf spy]]
             [liberator.core :refer [resource defresource]]
             [ring.middleware.params :refer [wrap-params]]
@@ -52,10 +52,10 @@
 ;TODO Move put to separate module
 
 (defn- auth [token ctx]
-  (= (token *config*) (get-in ctx [:request :headers "auth-token"])))
+  (= (token env) (get-in ctx [:request :headers "auth-token"])))
 
 (defn- auth-configured [token ctx]
-  (token *config*))
+  (token env))
 
 (def auth-publish (partial auth :auth-token-publish))
 (def auth-publish-configured (partial auth-configured :auth-token-publish))

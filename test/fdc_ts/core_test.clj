@@ -1,10 +1,10 @@
 (ns fdc-ts.core-test
   (:require [clojure.test :refer :all]
             [fdc-ts.core :as core :refer :all]
-            [fdc-ts.config :refer :all]
             [fdc-ts.statistics.testdata :refer :all]
             [fdc-ts.projects :as projects]
             [fdc-ts.statistics.db :as db]
+            [environ.core :refer [env]]
             [ring.mock.request :as mock]
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
@@ -66,7 +66,7 @@
              401))))
 
 (defn- is-503-without-config [request]
-  (binding [*config* nil]
+  (with-redefs [env {}]
     (is (= (:status (handler request))
            503))))
 

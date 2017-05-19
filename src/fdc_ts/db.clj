@@ -1,16 +1,16 @@
 (ns fdc-ts.db
-  (:require [fdc-ts.config :refer :all]
+  (:require [environ.core :refer [env]]
             [korma.core :as korma-core]
             [korma.db :as korma-db]
             [schema.core :as s]))
 
-; load test_config.clj db config to configure database connector
+; load db config to configure database connector from environment vars
 (def db-connection-info (korma-db/mysql
-                          {:host (get-property :db-host)
-                           :port (get-property :db-port)
-                           :db (get-property :db-schema)
-                           :user (get-property :db-user)
-                           :password (get-property :db-pass)}))
+                          {:host (env :db-host)
+                           :port (env :db-port)
+                           :db (env :db-schema)
+                           :user (env :db-user)
+                           :password (env :db-pass)}))
 
 (korma-db/defdb db db-connection-info)
 

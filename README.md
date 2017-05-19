@@ -47,6 +47,8 @@ Return a list of all projects known by the statistic server in the format: `{"pr
 
 #Build
 
+At the moment you still have to copy the UI: resources/public from https://github.com/freiheit-com/fdc-web-test-monitor.
+
 lein ring uberjar (needs https://github.com/weavejester/lein-ring)
 
 NOT lein uberjar (jars produced by this command do not contain the correct start code)
