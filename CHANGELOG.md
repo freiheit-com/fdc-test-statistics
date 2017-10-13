@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.1] - 2017-10-10
+### Changed
+- Introduced project tokens
+- allow project tokens to get and push statistiks
+
 ## [0.10.0] - 2016-03-06
 ### Changed
 - Update to Clojure 1.8.0

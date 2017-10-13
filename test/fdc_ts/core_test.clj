@@ -41,20 +41,28 @@
 ;;; handler test
 
 (def +valid-statistic-token+ "test-token-stat")
+(def +valid-project-token+ "test-token-project")
 (def +valid-meta-token+ "test-token-meta")
 
 (def +test-config+ {:auth-token-publish "test-token-pub"
                     :auth-token-statistics +valid-statistic-token+
-                    :auth-token-meta +valid-meta-token+})
+                    :auth-token-meta +valid-meta-token+
+                    :auth-token-project "{\"test\": \"test-token-project\", \"foo\": \"test-token-foo\"}"})
 
 (defn- with-valid-statistic-token [request]
   (mock/header request "auth-token" +valid-statistic-token+))
+
+(defn- with-valid-project-token [request]
+  (mock/header request "auth-token" +valid-project-token+))
 
 (defn- with-valid-meta-token [request]
   (mock/header request "auth-token" +valid-meta-token+))
 
 (defn- with-invalid-token [request]
   (mock/header request "auth-token" "invalid-token"))
+
+(defn- without-token [request]
+  (mock/header request "auth-token" nil))
 
 (defn- is-401-with-test-token [request]
   (is (= (:status (handler (with-invalid-token request)))
@@ -134,6 +142,34 @@
       #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/coverage/latest/test/test-sub1/java")))]
          (is (= 200 (:status response)))
          (is (= +three-sub-project-expected-overall-coverage-json+ (:body response))))))
+
+
+(deftest should-get-project-coverage-with-project-token
+  (with-redefs-fn {#'db/select-most-recent-coverages-at
+                   (fn [_ project & _]
+                     (is (= "test" project))
+                     +three-sub-project-data+)}
+    #(let [response (handler (with-valid-project-token (mock/request :get "/statistics/coverage/latest/test")))]
+      (is (= 200 (:status response)))
+      (is (= +three-sub-project-expected-overall-coverage-json+ (:body response))))))
+
+(deftest should-reject-get-project-coverage-with-project-token
+  (with-redefs-fn {#'db/select-most-recent-coverages-at
+                   (fn [_ project & _]
+                     (is (= "foo" project))
+                     +three-sub-project-data+)}
+    #(let [response (handler (with-valid-project-token (mock/request :get "/statistics/coverage/latest/foo")))]
+      (is (= 401 (:status response)))
+      (is (= "Not authorized." (:body response))))))
+
+(deftest should-reject-project-coverage-without-token
+  (with-redefs-fn {#'db/select-most-recent-coverages-at
+                   (fn [_ project & _]
+                     (is (= "bar" project))
+                     +three-sub-project-data+)}
+    #(let [response (handler (without-token (mock/request :get "/statistics/coverage/latest/bar")))]
+      (is (= 401 (:status response)))
+      (is (= "Not authorized." (:body response))))))
 
 ;; get-project-coverage-date
 
