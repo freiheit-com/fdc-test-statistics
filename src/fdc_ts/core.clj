@@ -51,25 +51,31 @@
 
 ;TODO Move put to separate module
 
-(defn- auth [token ctx]
-  (= (token env) (get-in ctx [:request :headers "auth-token"])))
+(defn- auth [token project-tokens project ctx]
+  (let [request-token  (get-in ctx [:request :headers "auth-token"])]
+    (or (= (token env) request-token)
+        (= (get-in (json/parse-string (project-tokens env))  [project]) request-token))))
 
 (defn- auth-configured [token ctx]
   (token env))
 
-(def auth-publish (partial auth :auth-token-publish))
-(def auth-publish-configured (partial auth-configured :auth-token-publish))
+(def auth-publish
+  (partial auth :auth-token-publish :auth-token-project nil))
+(def auth-publish-configured (and(partial auth-configured :auth-token-publish)
+                                 (partial auth-configured :auth-token-project)))
 
-(def auth-statistics (partial auth :auth-token-statistics))
-(def auth-statistics-configured (partial auth-configured :auth-token-statistics))
+(def auth-statistics (partial auth :auth-token-statistics :auth-token-project))
+(def auth-statistics-configured (and (partial auth-configured :auth-token-statistics)
+                                     (partial auth-configured :auth-token-project)))
 
-(def auth-meta (partial auth :auth-token-meta))
+(def auth-meta (partial auth :auth-token-meta "{}" nil ))
 (def auth-meta-configured (partial auth-configured :auth-token-meta))
 
 (def project-malformed? (comp not validate-project-data :json))
 
 (defn- json-body [ctx]
   {:json (get-json-body ctx)})
+
 
 (defresource put-coverage []
   :initialize-context json-body
@@ -86,14 +92,14 @@
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
-  :authorized? auth-statistics
+  :authorized? (partial auth-statistics project)
   :handle-ok (fn [_] (handle-coverage-request time project subproject language)))
 
 (defresource get-project-coverage-diff [project days]
   :available-media-types ["application/json"]
   :allowed-methods [:get]
   :service-available? auth-statistics-configured
-  :authorized? auth-statistics
+  :authorized? (partial auth-statistics project)
   :handle-ok (fn [_] (json/generate-string (project-diff-days project days))))
 
 (defresource put-project []

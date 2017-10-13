@@ -35,6 +35,10 @@
                    :env {:auth-token-publish "test-token-pub"
                          :auth-token-statistics "test-token-stat"
                          :auth-token-meta "test-token-meta"
+                         :auth-token-project  "{
+                            \"test\": \"test-token-project\",
+                            \"foo\": \"test-token-foo\"
+                                           }"
                          :db-host "localhost"
                          :db-port "3306"
                          :db-schema "fdc-test-statistic"
