@@ -17,9 +17,9 @@
 (def Meta-Wire {(s/required-key :projects)
                 [{(s/required-key :project) s/Str
                   (s/required-key :subprojects)
-                                            [{(s/required-key :subproject) s/Str
-                                              (s/required-key :languages)
-                                                                           [{:language s/Str}]}]}]})
+                  [{(s/required-key :subproject) s/Str
+                    (s/required-key :languages)
+                    [{:language s/Str}]}]}]})
 
 (def +project-name-pattern+ "[\\w\\-]+")
 (def +project-path-pattern+ (re-pattern +project-name-pattern+))

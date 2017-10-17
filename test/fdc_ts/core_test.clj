@@ -66,7 +66,7 @@
 
 (defn- is-401-with-test-token [request]
   (is (= (:status (handler (with-invalid-token request)))
-             401)))
+         401)))
 
 (defn- is-503-without-config [request]
   (with-redefs [env {}]
@@ -100,7 +100,7 @@
 
 (deftest should-reject-put-project-with-missing-project-and-subproject-name
   (is (= (:status (handler (with-valid-meta-token (mock/request :put "/meta/project" "{\"language\": \"java\"}"))))
-             400)))
+         400)))
 
 ;; get-projects
 
