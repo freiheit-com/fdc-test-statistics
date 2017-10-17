@@ -61,11 +61,11 @@
 
 (def auth-publish (partial auth :auth-token-publish :auth-token-project nil))
 (def auth-publish-configured (and(partial auth-configured :auth-token-publish)
-                                 (partial auth-configured :auth-token-project)))
+  (partial auth-configured :auth-token-project)))
 
 (def auth-statistics (partial auth :auth-token-statistics :auth-token-project))
 (def auth-statistics-configured (and (partial auth-configured :auth-token-statistics)
-                                     (partial auth-configured :auth-token-project)))
+  (partial auth-configured :auth-token-project)))
 
 (def auth-meta (partial auth :auth-token-meta "{}" nil ))
 (def auth-meta-configured (partial auth-configured :auth-token-meta))
