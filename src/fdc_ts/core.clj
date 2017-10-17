@@ -59,8 +59,9 @@
 (defn- auth-configured [token ctx]
   (token env))
 
-(def auth-publish
-  (partial auth :auth-token-publish :auth-token-project nil))
+(defn- auth-publish [ctx]
+  (let [project (get-in (:json ctx)  "project")]
+  (auth :auth-token-publish :auth-token-project project ctx)))
 (def auth-publish-configured (and(partial auth-configured :auth-token-publish)
                                  (partial auth-configured :auth-token-project)))
 
