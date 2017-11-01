@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/freiheit-com/fdc-test-statistics.svg?branch=master)](https://travis-ci.org/freiheit-com/fdc-test-statistics)
 
-#REST-API:
+# REST-API:
 
 ## Coverage-Data
 
@@ -45,10 +45,22 @@ Return a list of all projects known by the statistic server in the format: `{"pr
                                   {"subproject": "baz", "languages": ...}"`
 
 
-#Build
+# Build
 
 At the moment you still have to copy the UI: resources/public from https://github.com/freiheit-com/fdc-web-test-monitor.
 
-lein ring uberjar (needs https://github.com/weavejester/lein-ring)
+Use ./build.sh to build the docker image. The image will be tagged with :latest and :$VERSION, with $VERSION being the same in build.sh and project.clj
 
-NOT lein uberjar (jars produced by this command do not contain the correct start code)
+Or to build the jar directly:
+
+    lein uberjar (needs https://github.com/weavejester/lein-ring)
+
+## Local testing
+
+How to locally test the docker image is described in `LOCAL_TESTING`
+
+# Push
+
+After building the project use ./push.sh to push the :latest tagged image to the docker registry and restart the service. The image will be tagged with :latest in the registry.
+
+To talk to the kube cluster (for rescaling) you will have to enter username and password. These should be fetched for you from the cluster and printed to the command line at the beginning of ./push.sh

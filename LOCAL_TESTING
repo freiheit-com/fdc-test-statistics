@@ -1,0 +1,23 @@
+### MYSQL for local testing
+
+Spin up a local mysql:
+docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=test -d -p 3306:3306 mysql
+
+Connect to it:
+docker run -it --link test-mysql:mysql --rm mysql sh -c 'exec mysql -h mysql -P 3306 -u root -p'
+
+Create user and db:
+CREATE USER test;
+CREATE DATABASE fdc_test_statistic;
+GRANT ALL PRIVILEGES ON fdc_test_statistic.* TO 'test'@'%' IDENTIFIED BY 'test';
+
+
+### Running the service image locally
+docker run -i --rm \
+    --link test-mysql:mysql \
+    -p 3001:3001 \
+    --name fdc-test-statistic \
+    --env-file test_config.env \
+    --volume $(pwd)/test_keystore.jks:/keystore/test_keystore.jks:ro \
+    gcr.io/fdc-test-statistic/fdc-test-statistic:latest
+
