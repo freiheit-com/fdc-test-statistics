@@ -38,7 +38,6 @@
                          :db-user "test"
                          :db-pass "test"
                          :keystore "/keystore/test_keystore.jks"
-                         :keystore "test_keystore.jks"
                          :key-password "testpwd"
                          :gce-account-id "test"}}}
   :dependencies [[org.clojure/clojure "1.8.0"]
