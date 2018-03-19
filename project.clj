@@ -38,7 +38,9 @@
                          :db-user "test"
                          :db-pass "test"
                          :keystore "/keystore/test_keystore.jks"
-                         :key-password "testpwd"}}}
+                         :keystore "test_keystore.jks"
+                         :key-password "testpwd"
+                         :gce-account-id "test"}}}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [acyclic/squiggly-clojure "0.1.4"]
                  [cheshire "5.5.0"]
@@ -62,4 +64,6 @@
                  [ring/ring-mock "0.3.0"]
                  [ring-cors "0.1.7"]
                  [org.clojure/math.combinatorics "0.1.1"]
+                 [googlecloud/bigquery "0.3.9"]
+                 [googlecloud/core "0.3.4"]
                  [environ "1.1.0"]])

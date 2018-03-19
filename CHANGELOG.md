@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.11.0] - 2018-03-19
+### Added
+- REST-API for deployment tracking
+- BigQuery configuration
+
 ## [0.10.1] - 2017-10-10
 ### Changed
 - Introduced project tokens
