@@ -5,6 +5,7 @@
             [fdc-ts.statistics.latest :refer :all]
             [fdc-ts.statistics.diff :refer :all]
             [fdc-ts.statistics.db :refer :all]
+            [fdc-ts.statistics.deployment :refer :all]
             [fdc-ts.projects :refer :all]
             [environ.core :refer [env]]
             [taoensso.timbre :refer [log logf spy]]
@@ -63,6 +64,11 @@
 (def auth-publish-configured (and(partial auth-configured :auth-token-publish)
                               (partial auth-configured :auth-token-project)))
 
+(def deployment-env-configured (and(partial auth-configured :auth-token-publish)
+                                 (partial auth-configured :auth-token-project)
+                                   (partial auth-configured :gce-account-id)
+                                   (partial auth-configured :gce-account-password)))
+
 (def auth-statistics (partial auth :auth-token-statistics :auth-token-project))
 (def auth-statistics-configured (and (partial auth-configured :auth-token-statistics)
                                  (partial auth-configured :auth-token-project)))
@@ -71,6 +77,8 @@
 (def auth-meta-configured (partial auth-configured :auth-token-meta))
 
 (def project-malformed? (comp not validate-project-data :json))
+
+(def deployment-request-malformed? (comp not validate-deployment-request :json))
 
 (defn- json-body [ctx]
   {:json (get-json-body ctx)})
@@ -118,6 +126,16 @@
   :authorized? auth-meta
   :handle-ok (fn [_] (json/generate-string (s/validate Meta-Wire (get-all-projects)))))
 
+(defresource put-deployment []
+  :initialize-context json-body
+  :available-media-types ["application/json"]
+  :allowed-methods [:put]
+  :malformed? deployment-request-malformed?
+  :body [:json DeploymentRequest]
+  :service-available? auth-publish-configured
+  :authorized? auth-publish
+  :put! (insert-deployment :json))
+
 (defroutes app
   (PUT "/publish/coverage" [] (put-coverage))
 
@@ -148,6 +166,7 @@
 
   (PUT ["/meta/project"] [] (put-project))
   (GET ["/meta/projects"] [] (get-projects))
+  (PUT ["/publish/deployment"] [] (put-deployment))
   (route/files "/" {:root "ui"}))
 
 (def handler

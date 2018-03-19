@@ -69,4 +69,6 @@
                  [ring/ring-mock "0.3.0"]
                  [ring-cors "0.1.7"]
                  [org.clojure/math.combinatorics "0.1.1"]
+                 [googlecloud/bigquery "0.3.9"]
+                 [googlecloud/core "0.3.4"]
                  [environ "1.1.0"]])
