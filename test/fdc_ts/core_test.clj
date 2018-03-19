@@ -5,6 +5,7 @@
             [fdc-ts.projects :as projects]
             [fdc-ts.statistics.db :as db]
             [environ.core :refer [env]]
+            [cheshire.core :as cheshire]
             [ring.mock.request :as mock]
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]))
 
@@ -43,17 +44,23 @@
 (def +valid-statistic-token+ "test-token-stat")
 (def +valid-project-token+ "test-token-project")
 (def +valid-meta-token+ "test-token-meta")
+(def +valid-pub-token+ "test-token-public")
 
-(def +test-config+ {:auth-token-publish "test-token-pub"
+(def +test-config+ {:auth-token-publish "test-token-public"
+
                     :auth-token-statistics +valid-statistic-token+
                     :auth-token-meta +valid-meta-token+
-                    :auth-token-project "{\"test\": \"test-token-project\", \"foo\": \"test-token-foo\"}"})
+                    :auth-token-project "{\"test\": \"test-token-project\", \"foo\": \"test-token-foo\"}"
+                    :gce-account-id "test"})
 
 (defn- with-valid-statistic-token [request]
   (mock/header request "auth-token" +valid-statistic-token+))
 
 (defn- with-valid-project-token [request]
   (mock/header request "auth-token" +valid-project-token+))
+
+(defn- with-valid-pub-token [request]
+  (mock/header request "auth-token" +valid-pub-token+))
 
 (defn- with-valid-meta-token [request]
   (mock/header request "auth-token" +valid-meta-token+))
@@ -210,3 +217,16 @@
   (with-redefs-fn {#'fdc-ts.core/project-diff-days (fn [& _] :called)}
        #(let [response (handler (with-valid-statistic-token (mock/request :get "/statistics/diff/coverage/test/days/invalidDay")))]
           (is (= nil response)))))
+
+
+;;;; publish coverage
+
+(def put-publish-deployment (-> (mock/request :put "/publish/deployment" "{}") (mock/content-type "application/json")))
+
+(deftest should-reject-publish-deployment-if-auth-token-not-set
+  (is-503-without-config put-publish-deployment))
+
+(deftest should-throw-if-deployment-parameter-not-set
+           (let [response (handler (with-valid-pub-token put-publish-deployment))]
+      (is (= 400 (:status response)))
+      (is (= "Bad request." (:body response)))))
