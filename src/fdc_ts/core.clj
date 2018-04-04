@@ -68,6 +68,7 @@
 
 (def deployment-env-configured (and(partial auth-configured :auth-token-publish)
                                  (partial auth-configured :auth-token-project)
+                                   (partial auth-configured :gce-auth-file)
                                    (partial auth-configured :gce-account-id)))
 
 (def auth-statistics (partial auth :auth-token-statistics :auth-token-project))

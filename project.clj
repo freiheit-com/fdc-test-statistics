@@ -39,6 +39,7 @@
                          :db-pass "test"
                          :keystore "/keystore/test_keystore.jks"
                          :key-password "testpwd"
+                         :gce-auth-file "/gce/auth-test-file"
                          :gce-account-id "test"}}}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [acyclic/squiggly-clojure "0.1.4"]
