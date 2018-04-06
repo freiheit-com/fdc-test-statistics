@@ -1,16 +1,9 @@
-(defproject fdc-test-statistics "0.10.0"
+(defproject fdc-test-statistics "0.10.2"
   :description "lightweight test statistic data storage and aggregation"
   :url "https://github.com/freiheit-com/fdc-test-statistics"
   :license {:name "GPLv3"
             :url ""https://www.gnu.org/licenses/agpl-3.0.html""}
-  :plugins [[lein-ring "0.9.7"]
-            [lein-environ "1.1.0"]]
-  :ring {:port 3001
-         :handler fdc-ts.core/handler
-         :init fdc-ts.migrations/migrate
-         :ssl? true
-         :nrepl {:start? true}
-         :ssl-port 8443}
+  :plugins [[lein-environ "1.1.0"]]
   :repl-options {:nrepl-middleware
                  [cider.nrepl.middleware.apropos/wrap-apropos
                   cider.nrepl.middleware.classpath/wrap-classpath
@@ -27,9 +20,9 @@
                   cider.nrepl.middleware.trace/wrap-trace
                   cider.nrepl.middleware.undef/wrap-undef
                   refactor-nrepl.middleware/wrap-refactor]}
-  :jvm-opts ["-Dfdc.ts.config.file=test_config.clj"] ;YOU NEED TO CHANGE THIS IN PRODUCTION
   :main fdc-ts.core
-  :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.12.0"]]
+  :profiles {:uberjar {:aot :all}
+             :dev {:plugins [[com.jakemccrary/lein-test-refresh "0.12.0"]]
                    :dependencies [[midje "1.8.3"]
                                   [cider/cider-nrepl "0.11.0-SNAPSHOT"]]
                    :env {:auth-token-publish "test-token-pub"
@@ -44,7 +37,7 @@
                          :db-schema "fdc-test-statistic"
                          :db-user "test"
                          :db-pass "test"
-                         :keystore "test_keystore.jks"
+                         :keystore "/keystore/test_keystore.jks"
                          :key-password "testpwd"
                          :gce-account-id "test"}}}
   :dependencies [[org.clojure/clojure "1.8.0"]

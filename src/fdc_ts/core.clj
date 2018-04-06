@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [fdc-ts.common :refer :all]
             [fdc-ts.db :refer :all]
+            [fdc-ts.migrations :as migrations]
             [fdc-ts.statistics.latest :refer :all]
             [fdc-ts.statistics.diff :refer :all]
             [fdc-ts.statistics.db :refer :all]
@@ -10,6 +11,7 @@
             [environ.core :refer [env]]
             [taoensso.timbre :refer [log logf spy]]
             [liberator.core :refer [resource defresource]]
+            [ring.adapter.jetty :as jetty]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.cors :refer [wrap-cors]]
             [compojure.core :refer [defroutes ANY GET PUT POST context]]
@@ -173,3 +175,21 @@
       wrap-params
       (wrap-cors :access-control-allow-origin [#"http://localhost:3449"]
                  :access-control-allow-methods [:get :put :post :delete])))
+
+(defn -main
+  "main entry point"
+  [& args]
+  (migrations/migrate)
+  (try
+    (println "Starting service ...")
+    (jetty/run-jetty app {
+                          :port 3001
+                          :handler fdc-ts.core/handler
+                          :host (:hostname env)
+                          :ssl? true
+                          :nrepl {:start? true}
+                          :keystore (:keystore env)
+                          :key-password (:key-password env)
+                          :ssl-port 443})
+    (catch Exception e
+           (println "Exception thrown, shutting down"))))
