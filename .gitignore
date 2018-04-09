@@ -16,3 +16,5 @@ database.db
 .DS_Store
 *.iml
 /.idea/
+kubeconfig.yaml
+/gce/

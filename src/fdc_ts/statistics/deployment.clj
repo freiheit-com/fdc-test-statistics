@@ -17,6 +17,7 @@
    :uuid s/Str})
 
 (def account-id (env :gce-account-id))
+(def auth-file (env :gce-auth-file))
 (def project-id "fdc-test-statistic")
 (def dataset-id "fdc_deployment_statistic")
 (def table-id "deployments")
@@ -71,7 +72,7 @@
   "persists the given deployment value to big query"
   [data]
   (if (not  (nil? account-id))
-        (let [credentials (gc/service-credentials account-id "./resources/fdc-test-statistic.p12" [(bs/scopes :manage)])
+        (let [credentials (gc/service-credentials account-id auth-file [(bs/scopes :manage)])
         service (bs/service credentials)
         bq-data (transform-data data)]
     (ensure-table service project-id dataset-id table-id)

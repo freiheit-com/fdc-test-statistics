@@ -51,6 +51,7 @@
                     :auth-token-statistics +valid-statistic-token+
                     :auth-token-meta +valid-meta-token+
                     :auth-token-project "{\"test\": \"test-token-project\", \"foo\": \"test-token-foo\"}"
+                    :gce-auth-file "/test"
                     :gce-account-id "test"})
 
 (defn- with-valid-statistic-token [request]
