@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-VERSION="0.10.0"
+VERSION="0.10.2"
+
+set -e
 
 # build service
-lein ring uberjar
+LEIN_SNAPSHOTS_IN_RELEASE=1 lein uberjar
 
 # pull ui submodule
 # TODO

@@ -4,6 +4,7 @@
             [googlecloud.bigquery.datasets :as bd]
             [googlecloud.bigquery.tables :as bt]
             [googlecloud.bigquery.tabledata :as btd]
+            [taoensso.timbre :refer [log]]
             [schema.core                     :as s]
             [environ.core :refer [env]]))
 
@@ -11,12 +12,11 @@
   {:stage (s/enum  "test" "prod")
    :project s/Str
    :subproject s/Str
-   :git-hash s/Str
+   :githash s/Str
    :event (s/enum "START" "ENDE")
    :uuid s/Str})
 
 (def account-id (env :gce-account-id))
-(def account-password (env :gce-account-password))
 (def project-id "fdc-test-statistic")
 (def dataset-id "fdc_deployment_statistic")
 (def table-id "deployments")
@@ -44,7 +44,7 @@
                                :type :string
                                :mode :required}
                               {:name "timestamp"
-                               :type :TIMESTAMP
+                               :type :timestamp
                                :mode :nullable}]})
 
 (defn ensure-table
@@ -59,9 +59,9 @@
   "transform request data to big query format"
   [data]
   {"stage" (:stage data)
-   "project"   (:project data)
+   "project" (:project data)
    "subproject"  (:subproject data)
-   "git-hash" (:githash data)
+   "githash" (:githash data)
    "event" (:event data)
    "uuid" (:uuid data)
    "timestamp" (quot (System/currentTimeMillis) 1000)})
@@ -70,12 +70,12 @@
 (defn insert-deployment
   "persists the given deployment value to big query"
   [data]
-  (if (not (or (nil? account-id) (nil? account-password)))
-        (let [credentials (gc/service-credentials :account-id :account-password [(bs/scopes :manage)])
+  (if (not  (nil? account-id))
+        (let [credentials (gc/service-credentials account-id "./resources/fdc-test-statistic.p12" [(bs/scopes :manage)])
         service (bs/service credentials)
         bq-data (transform-data data)]
     (ensure-table service project-id dataset-id table-id)
-    (btd/insert-all service project-id dataset-id table-id bq-data))))
+    (btd/insert-all service project-id dataset-id table-id [bq-data]))))
 
 
 (defn validate-deployment-request [json-data]

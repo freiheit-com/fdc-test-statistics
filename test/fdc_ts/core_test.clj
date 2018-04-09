@@ -51,8 +51,7 @@
                     :auth-token-statistics +valid-statistic-token+
                     :auth-token-meta +valid-meta-token+
                     :auth-token-project "{\"test\": \"test-token-project\", \"foo\": \"test-token-foo\"}"
-                    :gce-account-id "test"
-                    :gce-account-password "test"})
+                    :gce-account-id "test"})
 
 (defn- with-valid-statistic-token [request]
   (mock/header request "auth-token" +valid-statistic-token+))
@@ -231,17 +230,3 @@
            (let [response (handler (with-valid-pub-token put-publish-deployment))]
       (is (= 400 (:status response)))
       (is (= "Bad request." (:body response)))))
-
-;(def put-publish-deployment-with-body (-> (mock/request :put "/publish/deployment" "{}")
-;                                          (mock/content-type "application/json")
-;                                          (mock/body (cheshire/generate-string {:stage "test"
-;                                                                                :project "test"
-;                                                                                :subproject "sub"
-;                                                                                :git-hash "git hash"
-;                                                                                :event "START"
-;                                                                                :uuid "uuid"}))))
-;
-;(deftest should-allow-if-deployment-parameter-set
-;           (let [response (handler (with-valid-pub-token put-publish-deployment-with-body))]
-;    (is (= 201 (:status response)))
-;    (is (= "" (:body response)))))
