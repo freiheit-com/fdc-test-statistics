@@ -61,7 +61,7 @@
                  [ring/ring-core "1.4.0"]
                  [ring/ring-servlet "1.4.0"]
                  [ring/ring-jetty-adapter "1.4.0"]
-                 [ring/ring-mock "0.3.0"]
+                 [ring/ring-mock "0.3.2"]
                  [ring-cors "0.1.7"]
                  [org.clojure/math.combinatorics "0.1.1"]
                  [googlecloud/bigquery "0.3.9"]

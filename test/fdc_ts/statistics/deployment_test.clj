@@ -25,7 +25,7 @@
 
 
 (deftest should-fail-if-not-enum-value
-  (is  (not (d/validate-deployment-request {:stage "test"
+  (is  (not (d/validate-deployment-request {:stage "Große Bühne"
                                        :project "test"
                                        :subproject "sub project"
                                        :githash "git hash"

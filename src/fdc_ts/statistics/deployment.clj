@@ -4,7 +4,7 @@
             [googlecloud.bigquery.datasets :as bd]
             [googlecloud.bigquery.tables :as bt]
             [googlecloud.bigquery.tabledata :as btd]
-            [taoensso.timbre :refer [log]]
+            [taoensso.timbre :refer [log error]]
             [schema.core                     :as s]
             [environ.core :refer [env]]))
 
@@ -13,7 +13,7 @@
    :project s/Str
    :subproject s/Str
    :githash s/Str
-   :event (s/enum "START" "ENDE")
+   :event s/Str
    :uuid s/Str})
 
 (def account-id (env :gce-account-id))
@@ -77,7 +77,6 @@
         bq-data (transform-data data)]
     (ensure-table service project-id dataset-id table-id)
     (btd/insert-all service project-id dataset-id table-id [bq-data]))))
-
 
 (defn validate-deployment-request [json-data]
    (nil? (s/check DeploymentRequest json-data)))

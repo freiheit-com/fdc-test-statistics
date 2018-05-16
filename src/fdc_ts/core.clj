@@ -54,10 +54,11 @@
 
 ;TODO Move put to separate module
 
-(defn- auth [token project-tokens project ctx]
+(defn auth [token project-tokens project ctx]
   (let [request-token  (get-in ctx [:request :headers "auth-token"])]
-    (or (= (token env) request-token)
-        (= (get-in (json/parse-string (project-tokens env))  [project]) request-token))))
+    (and (some? request-token)
+      (or (= (token env) request-token)
+        (= (get-in (json/parse-string (project-tokens env))  [project]) request-token)))))
 
 (defn- auth-configured [token ctx]
   (token env))
@@ -66,21 +67,21 @@
 (def auth-publish-configured (and(partial auth-configured :auth-token-publish)
                               (partial auth-configured :auth-token-project)))
 
-(def deployment-env-configured (and(partial auth-configured :auth-token-publish)
-                                 (partial auth-configured :auth-token-project)
-                                   (partial auth-configured :gce-auth-file)
-                                   (partial auth-configured :gce-account-id)))
-
 (def auth-statistics (partial auth :auth-token-statistics :auth-token-project))
 (def auth-statistics-configured (and (partial auth-configured :auth-token-statistics)
                                  (partial auth-configured :auth-token-project)))
 
-(def auth-meta (partial auth :auth-token-meta "{}" nil))
+(def auth-meta (partial auth :auth-token-meta :auth-token-project nil))
 (def auth-meta-configured (partial auth-configured :auth-token-meta))
 
 (def project-malformed? (comp not validate-project-data :json))
 
 (def deployment-request-malformed? (comp not validate-deployment-request :json))
+
+(def deployment-env-configured (and (partial auth-configured :auth-token-publish)
+                                   (partial auth-configured :auth-token-project)
+                                   (partial auth-configured :gce-auth-file)
+                                   (partial auth-configured :gce-account-id)))
 
 (defn- json-body [ctx]
   {:json (get-json-body ctx)})
@@ -132,9 +133,8 @@
   :initialize-context json-body
   :available-media-types ["application/json"]
   :allowed-methods [:put]
-  :malformed? deployment-request-malformed?
-  :body [:json DeploymentRequest]
   :service-available? deployment-env-configured
+  :malformed? deployment-request-malformed?
   :authorized? auth-publish
   :put! (comp insert-deployment :json ))
 
