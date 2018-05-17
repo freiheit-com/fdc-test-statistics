@@ -4,6 +4,7 @@
             [fdc-ts.statistics.testdata :refer :all]
             [fdc-ts.projects :as projects]
             [fdc-ts.statistics.db :as db]
+            [fdc-ts.statistics.deployment :as deployment]
             [environ.core :refer [env]]
             [cheshire.core :as cheshire]
             [ring.mock.request :as mock]
@@ -44,14 +45,13 @@
 (def +valid-statistic-token+ "test-token-stat")
 (def +valid-project-token+ "test-token-project")
 (def +valid-meta-token+ "test-token-meta")
-(def +valid-pub-token+ "test-token-public")
+(def +valid-pub-token+ "test-token-pub")
 
-(def +test-config+ {:auth-token-publish "test-token-public"
-
+(def +test-config+ {:auth-token-publish +valid-pub-token+
                     :auth-token-statistics +valid-statistic-token+
                     :auth-token-meta +valid-meta-token+
                     :auth-token-project "{\"test\": \"test-token-project\", \"foo\": \"test-token-foo\"}"
-                    :gce-auth-file "/test"
+                    :gce-auth-file "test_bg_keyfile"
                     :gce-account-id "test"})
 
 (defn- with-valid-statistic-token [request]
@@ -220,14 +220,62 @@
           (is (= nil response)))))
 
 
-;;;; publish coverage
+;;;; publish deployment
+(def put-publish-deployment (-> (mock/request :put "/publish/deployment" "{}")
+                                          (mock/json-body {:stage "test"
+                                                           :project "foo"
+                                                           :subproject "bar"
+                                                           :githash "Hash"
+                                                           :event "START"
+                                                           :uuid  "1"})))
 
-(def put-publish-deployment (-> (mock/request :put "/publish/deployment" "{}") (mock/content-type "application/json")))
 
 (deftest should-reject-publish-deployment-if-auth-token-not-set
-  (is-503-without-config put-publish-deployment))
+  (with-redefs-fn
+    {#'deployment/insert-deployment
+     (fn [data]
+       )}
+    #(let [response (handler put-publish-deployment)]
+      (is (= 400 (:status response))))))
 
-(deftest should-throw-if-deployment-parameter-not-set
-           (let [response (handler (with-valid-pub-token put-publish-deployment))]
+
+(def put-publish-deployment-with-missing-data (-> (mock/request :put "/publish/deployment" "{}")
+                                (mock/json-body {:stage "test"
+                                                 :uuid  "1"})))
+
+(deftest should-throw-if-deployment-body-malformed
+  (with-redefs-fn
+    {#'deployment/insert-deployment
+     (fn [data]
+       )}
+    #(let [response (handler (with-valid-pub-token put-publish-deployment-with-missing-data))]
       (is (= 400 (:status response)))
-      (is (= "Bad request." (:body response)))))
+      (is (= "Bad request." (:body response))))))
+
+(deftest should-accept-put-deployment-with-auth-token
+  (with-redefs-fn
+           {#'deployment/insert-deployment
+                          (fn [data]
+                            )}
+           #(let [response (handler (with-valid-pub-token put-publish-deployment))]
+           (is (= 201 (:status response))))))
+
+;;;; auth
+
+(deftest auth-should-work
+  (with-redefs [env +test-config+]
+   ; No auth set -> not authorized
+   (is (= (core/auth :auth-token-publish :auth-token-project nil {:request {:headers {}}})
+        false))
+   ; General token match -> authorized
+   (is (= (core/auth :auth-token-publish :auth-token-project "foo" {:request {:headers {"auth-token" "test-token-pub"}}})
+        true))
+   ; Project token match -> authorized
+   (is (= (core/auth :auth-token-publish :auth-token-project "foo" {:request {:headers {"auth-token" "test-token-foo"}}})
+        true))
+   ; no token match -> not authorized
+   (is (= (core/auth :auth-token-publish :auth-token-project "foo" {:request {:headers {"auth-token" "bar"}}})
+        false))
+   ; no token match -> not authorized
+   (is (= (core/auth :auth-token-meta :auth-token-project nil {:request {:headers {"auth-token" "test-token-foo"}}})
+           false))))
