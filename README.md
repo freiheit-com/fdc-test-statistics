@@ -31,7 +31,7 @@ this API:
 
 ### Register a project
 
-    curl -kv -X PUT https://<servername>/meta/project -d '{"project": "<project-name>"", "subproject": "<subproject-name>", "language": "<language>"}' -H "Content-Type: application/json" -H "auth-token: <meta-auth-token>"
+    curl -kv -X PUT https://<servername>/meta/project -d '{"project": "<project-name>", "subproject": "<subproject-name>", "language": "<language>"}' -H "Content-Type: application/json" -H "auth-token: <meta-auth-token>"
 
 Register (project, sub-project, language) with the statistic server. You may not publish data before registering.
 
