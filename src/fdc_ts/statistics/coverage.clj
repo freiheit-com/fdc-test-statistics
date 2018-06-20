@@ -1,4 +1,5 @@
-(ns fdc-ts.statistics.bq
+(ns fdc-ts.statistics.coverage
+  (:use fdc-ts.statistics.big-query)
   (:require [googlecloud.credentials :as gc]
             [googlecloud.bigquery.service :as bs]
             [googlecloud.bigquery.datasets :as bd]
@@ -7,15 +8,12 @@
             [taoensso.timbre :refer [log error]]
             [environ.core :refer [env]]))
 
-(def ^:private account-id (env :gce-account-id))
-(def ^:private auth-file (env :gce-auth-file))
-(def ^:private project-id "fdc-test-statistic")
-(def ^:private dataset-id "fdc_test_statistics")
-(def ^:private table-id "statistics")
+(def statistics-dataset-id "fdc_test_statistics")
+(def statistics-table-id "statistics")
 
-(def ^:private table {:table-reference {:table-id   table-id
+(def statistics-table {:table-reference {:table-id   statistics-table-id
                               :project-id project-id
-                              :dataset-id dataset-id}
+                              :dataset-id statistics-dataset-id}
             :description     "Contains coverage data with a timestamp."
             :schema          [{:name "project"
                                :type :string
@@ -33,16 +31,8 @@
                                :type :integer
                                :mode :required}]})
 
-(defn- ensure-table
-  "ensures the required table is present in bigquery"
-  [service project-id dataset-id table-id]
-  (try
-    (bt/get service project-id dataset-id table-id)
-    (catch Exception e
-      (bt/insert service table))))
-
-(defn- transform-data
-  "transform request data to big query format"
+(defn- transform-coverage-data
+  "transform coverage request data to big query format"
   [data]
   {"project" (:project data)
    "subproject"  (:subproject data)
@@ -51,12 +41,12 @@
    "covered" (:covered data)})
 
 
-(defn insert-coverage-in-bq
+(defn insert-coverage-into-bq
   "persists the given coverage value to big query"
   [data]
   (if (not  (nil? account-id))
         (let [credentials (gc/service-credentials account-id auth-file [(bs/scopes :manage)])
         service (bs/service credentials)
-        bq-data (transform-data data)]
-    (ensure-table service project-id dataset-id table-id)
-    (btd/insert-all service project-id dataset-id table-id [bq-data]))))
+        bq-data (transform-coverage-data data)]
+    (ensure-table service project-id statistics-dataset-id statistics-table-id statistics-table)
+    (btd/insert-all service project-id statistics-dataset-id statistics-table-id [bq-data]))))

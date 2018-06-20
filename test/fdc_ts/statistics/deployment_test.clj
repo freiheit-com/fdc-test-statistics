@@ -1,5 +1,6 @@
 (ns fdc-ts.statistics.deployment-test
   (:require [clojure.test :refer :all]
+            [fdc-ts.statistics.big-query :as bq :refer :all]
             [fdc-ts.statistics.deployment :as d :refer :all]
             [environ.core :refer [env]]
             [googlecloud.credentials :as gc]
@@ -33,7 +34,7 @@
                                        :uuid "uuid"}))))
 
 (deftest should-insert-in-bq
-           (with-redefs [d/account-id  "test"
+           (with-redefs [bq/account-id "test"
                    gc/service-credentials (fn [_ _ _])
                    bs/service (fn [_])
                    bt/get (fn [_ _ _])

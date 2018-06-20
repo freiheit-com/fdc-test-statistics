@@ -1,6 +1,7 @@
-(ns fdc-ts.statistics.statistics-test
+(ns fdc-ts.statistics.coverage-test
   (:require [clojure.test :refer :all]
-            [fdc-ts.statistics.bq :as d :refer :all]
+            [fdc-ts.statistics.big-query :as bq :refer :all]
+            [fdc-ts.statistics.coverage :as d :refer :all]
             [environ.core :refer [env]]
             [googlecloud.credentials :as gc]
             [googlecloud.bigquery.service :as bs]
@@ -8,8 +9,8 @@
             [googlecloud.bigquery.tables :as bt]
             [googlecloud.bigquery.tabledata :as btd]))
 
-(deftest should-insert-coverage-in-bq
-           (with-redefs [d/account-id "test"
+(deftest should-insert-coverage-into-bq
+           (with-redefs [bq/account-id "test"
                    gc/service-credentials (fn [_ _ _])
                    bs/service (fn [_])
                    bt/get (fn [_ _ _])
@@ -22,4 +23,4 @@
                       :subproject "sub"
                       :lines 100
                       :covered 2}]
-      (d/insert-coverage-in-bq data))))
+      (d/insert-coverage-into-bq data))))

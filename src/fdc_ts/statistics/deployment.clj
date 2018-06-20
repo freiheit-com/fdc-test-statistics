@@ -1,4 +1,5 @@
 (ns fdc-ts.statistics.deployment
+  (:use fdc-ts.statistics.big-query)
   (:require [googlecloud.credentials :as gc]
             [googlecloud.bigquery.service :as bs]
             [googlecloud.bigquery.datasets :as bd]
@@ -16,15 +17,12 @@
    :event s/Str
    :uuid s/Str})
 
-(def ^:private account-id (env :gce-account-id))
-(def ^:private auth-file (env :gce-auth-file))
-(def ^:private project-id "fdc-test-statistic")
-(def ^:private dataset-id "fdc_deployment_statistic")
-(def ^:private table-id "deployments")
+(def deployment-dataset-id "fdc_deployment_statistic")
+(def deployment-table-id "deployments")
 
-(def ^:private table {:table-reference {:table-id   table-id
+(def ^:private deployment-table {:table-reference {:table-id deployment-table-id
                               :project-id project-id
-                              :dataset-id dataset-id}
+                              :dataset-id deployment-dataset-id}
             :description     "Contains the start and end tracking data of deployments."
             :schema          [{:name "stage"
                                :type :string
@@ -48,14 +46,6 @@
                                :type :timestamp
                                :mode :nullable}]})
 
-(defn- ensure-table
-  "ensures the required table is present in bigquery"
-  [service project-id dataset-id table-id]
-  (try
-    (bt/get service project-id dataset-id table-id)
-    (catch Exception e
-      (bt/insert service table))))
-
 (defn- transform-data
   "transform request data to big query format"
   [data]
@@ -75,8 +65,8 @@
         (let [credentials (gc/service-credentials account-id auth-file [(bs/scopes :manage)])
         service (bs/service credentials)
         bq-data (transform-data data)]
-    (ensure-table service project-id dataset-id table-id)
-    (btd/insert-all service project-id dataset-id table-id [bq-data]))))
+    (ensure-table service project-id deployment-dataset-id deployment-table-id deployment-table)
+    (btd/insert-all service project-id deployment-dataset-id deployment-table-id [bq-data]))))
 
 (defn validate-deployment-request [json-data]
    (nil? (s/check DeploymentRequest json-data)))

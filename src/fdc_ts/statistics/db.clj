@@ -1,7 +1,7 @@
 (ns fdc-ts.statistics.db
   (:use fdc-ts.common
         fdc-ts.projects
-        fdc-ts.statistics.bq)
+        fdc-ts.statistics.coverage)
   (:require [clojure.set :as set]
             [korma.core :refer :all]
             [taoensso.timbre :refer [log logf]]
@@ -112,6 +112,6 @@
       (if (coverage-for-today-exist? data)
         (update-todays-coverage coverage-data project)
         (insert-new-coverage-for-today coverage-data project))
-      (log :info "inserting coverage into bq")
-      (insert-coverage-in-bq data)
+      (log :info "inserting coverage into big query")
+      (insert-coverage-into-bq data)
       )))
