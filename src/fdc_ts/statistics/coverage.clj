@@ -29,6 +29,9 @@
                                :mode :required}
                               {:name "covered"
                                :type :integer
+                               :mode :required}
+                              {:name "language"
+                               :type :integer
                                :mode :required}]})
 
 (defn- transform-coverage-data
@@ -38,7 +41,8 @@
    "subproject"  (:subproject data)
    "timestamp" (quot (System/currentTimeMillis) 1000)
    "lines" (:lines data)
-   "covered" (:covered data)})
+   "covered" (:covered data)
+   "language" (:language data)})
 
 
 (defn insert-coverage-into-bq
