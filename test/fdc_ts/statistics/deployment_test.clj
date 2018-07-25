@@ -32,6 +32,15 @@
                                        :githash "git hash"
                                        :event "BEGIN"
                                        :uuid "uuid"}))))
+(deftest should-valdate-json-with-tags
+         (is  (d/validate-deployment-request {:stage "test"
+                                              :project "test"
+                                              :subproject "sub project"
+                                              :githash "git hash"
+                                              :event "START"
+                                              :uuid "uuid"
+                                              :tags ["dev" "integration test" "core"]})))
+
 
 (deftest should-insert-in-bq
            (with-redefs [bq/account-id "test"
@@ -48,5 +57,6 @@
                       :subproject "sub"
                       :githash "git hash"
                       :event "START"
-                      :uuid "uuid"}]
+                      :uuid "uuid"
+                      :tags ["dev" "main"]}]
       (d/insert-deployment data))))
