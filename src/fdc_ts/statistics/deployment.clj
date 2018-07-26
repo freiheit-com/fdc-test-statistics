@@ -15,7 +15,8 @@
    :subproject s/Str
    :githash s/Str
    :event s/Str
-   :uuid s/Str})
+   :uuid s/Str
+   (s/optional-key :tags) [s/Str]})
 
 (def deployment-dataset-id "fdc_deployment_statistic")
 (def deployment-table-id "deployments")
@@ -44,7 +45,10 @@
                                :mode :required}
                               {:name "timestamp"
                                :type :timestamp
-                               :mode :nullable}]})
+                               :mode :nullable}
+                              {:name "tags"
+                               :type :string
+                               :mode :repeated}]})
 
 (defn- transform-data
   "transform request data to big query format"
@@ -55,7 +59,8 @@
    "githash" (:githash data)
    "event" (:event data)
    "uuid" (:uuid data)
-   "timestamp" (quot (System/currentTimeMillis) 1000)})
+   "timestamp" (quot (System/currentTimeMillis) 1000)
+   "tags" (:tags data)})
 
 
 (defn insert-deployment
