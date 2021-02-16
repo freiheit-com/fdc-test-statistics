@@ -17,6 +17,7 @@
             [compojure.core :refer [defroutes ANY GET PUT POST context]]
             [compojure.route :as route]
             [cheshire.core :as json]
+            [clojure.string :as str]
             [clj-time [core :as t][coerce :as tc][format :as tf][predicates :as tp]]
             [schema.core :as s]))
 
@@ -55,7 +56,10 @@
 ;TODO Move put to separate module
 
 (defn auth [token project-tokens project ctx]
-  (let [request-token  (get-in ctx [:request :headers "auth-token"])]
+;  TODO remove auth-token header
+  (let [header-token  (get-in ctx [:request :headers "auth-token"])
+        auth-token (last (str/split (get-in ctx [:request :headers "Authorization"]) #" "))
+        request-token (first (remove str/blank? [header-token auth-token]))]
     (and (some? request-token)
       (or (= (token env) request-token)
         (= (get-in (json/parse-string (project-tokens env))  [project]) request-token)))))

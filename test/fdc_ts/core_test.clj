@@ -63,6 +63,9 @@
 (defn- with-valid-pub-token [request]
   (mock/header request "auth-token" +valid-pub-token+))
 
+(defn- with-valid-bearer-pub-token [request]
+  (mock/header request "Authorization" (str "Bearer " +valid-pub-token+)))
+
 (defn- with-valid-meta-token [request]
   (mock/header request "auth-token" +valid-meta-token+))
 
@@ -260,6 +263,14 @@
            #(let [response (handler (with-valid-pub-token put-publish-deployment))]
            (is (= 201 (:status response))))))
 
+(deftest should-accept-put-deployment-with-bearer-token
+  (with-redefs-fn
+    {#'deployment/insert-deployment
+     (fn [data]
+       )}
+    #(let [response (handler (with-valid-bearer-pub-token put-publish-deployment))]
+      (is (= 201 (:status response))))))
+
 ;;;; auth
 
 (deftest auth-should-work
@@ -270,6 +281,9 @@
    ; General token match -> authorized
    (is (= (core/auth :auth-token-publish :auth-token-project "foo" {:request {:headers {"auth-token" "test-token-pub"}}})
         true))
+   ; General token as Bearer match -> authorized
+   (is (= (core/auth :auth-token-publish :auth-token-project "foo" {:request {:headers {"Authorization" "Bearer test-token-pub"}}})
+           true))
    ; Project token match -> authorized
    (is (= (core/auth :auth-token-publish :auth-token-project "foo" {:request {:headers {"auth-token" "test-token-foo"}}})
         true))
